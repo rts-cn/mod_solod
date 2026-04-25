@@ -1,0 +1,36 @@
+package mod
+
+import (
+	"solod.dev/so/fmt"
+	// "solod.dev/so/strings"
+	"mod_solod/internal/freeswitch"
+)
+
+func app(session *freeswitch.Session, data *freeswitch.Char) {
+	freeswitch.Infof("app\n")
+	// session.Infof("in app\n")
+	// session.Infof("%s", "in app\n")
+	var frame *freeswitch.Frame
+	session.ReadFrame(&frame)
+	freeswitch.Infof("read len=%d\n", frame.DataLen)
+	session.WriteFrame(frame)
+}
+
+func api(cmd *freeswitch.Char, session *freeswitch.Session, stream *freeswitch.Stream) freeswitch.Status {
+	stream.Write("blah blah\n")
+	buf := fmt.NewBuffer(64)
+	s := fmt.Sprintf(buf, "%s\n", "blah")
+	stream.Write(s)
+	stream.Writef(stream, s)
+	stream.Writef(stream, "%d %s", 7, "blah")
+	// stream.Write2("%d %s", 7, "blah")
+	return 0
+}
+
+func OnLoad(module_interface **freeswitch.ModuleInterface) {
+	var apii *freeswitch.APIInterface
+	var appi *freeswitch.AppInterface
+	freeswitch.Infof("Loading ...\n")
+	freeswitch.SWITCH_ADD_API(apii, "solod", "solod", api, "solod")
+	freeswitch.SWITCH_ADD_APP(appi, "solod", "solod", "solod", app, "solod", freeswitch.SAF_NONE)
+}

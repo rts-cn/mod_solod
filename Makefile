@@ -1,0 +1,20 @@
+BASE_DIR=/usr/local/freeswitch
+CFLAGS=-I./generated -I$(BASE_DIR)/include/freeswitch # -fvisibility=hidden
+LDFLAGS=-L$(BASE_DIR)/lib -lfreeswitch
+
+all:
+	CFLAGS="$(CFLAGS)"" -shared" LDFLAGS="$(LDFLAGS)" so build -o mod_solod.so .
+
+.PHONY: main
+main:
+	CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" so build -o main .
+
+gen:
+	so translate -o generated .
+
+c:
+	# gcc $(GCFLAGS) $(GLDFLAGS) -o mod_solod.so generated/**/*.c
+	gcc $(CFLAGS) $(LDFLAGS) -o mod_solod.so $(shell find generated -name "*.c")
+
+install:
+	cp mod_solod.so /usr/local/freeswitch/mod/
