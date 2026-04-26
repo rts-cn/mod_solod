@@ -55,6 +55,16 @@ const freeswitch_LogLevel freeswitch_LOG_INFO = 6;
 
 // -- frame.go --
 
+uint8_t* freeswitch_Frame_Data(void* self) {
+    freeswitch_Frame* frame = self;
+    return frame->data;
+}
+
+uint32_t freeswitch_Frame_DataLen(void* self) {
+    freeswitch_Frame* frame = self;
+    return frame->datalen;
+}
+
 // -- freeswitch.go --
 
 void freeswitch_Init(void) {

@@ -22,7 +22,6 @@
 
 typedef const char cchar_t;   // some functions need a const char *
 #define Writef write_function // stream->write_function
-#define DataLen datalen // frame->datalen
 
 // -- Types --
 typedef so_int freeswitch_SwitchModuleInterfaceName;
@@ -74,6 +73,8 @@ extern const freeswitch_LogLevel freeswitch_LOG_ERROR;
 extern const freeswitch_LogLevel freeswitch_LOG_INFO;
 
 // -- Functions and methods --
+uint8_t* freeswitch_Frame_Data(void* self);
+uint32_t freeswitch_Frame_DataLen(void* self);
 void freeswitch_Init(void);
 void freeswitch_Log(freeswitch_LogLevel level, so_String format, so_Slice args);
 void freeswitch_Session_ReadFrame(void* self, freeswitch_Frame** frame);

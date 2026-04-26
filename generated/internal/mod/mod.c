@@ -12,7 +12,7 @@ static void app(freeswitch_Session* session, cchar_t* data) {
     // session.Infof("%s", "in app\n")
     freeswitch_Frame* frame = NULL;
     freeswitch_Session_ReadFrame(session, &frame);
-    freeswitch_Infof("read len=%d\n", frame->DataLen);
+    freeswitch_Infof("read len=%d\n", freeswitch_Frame_DataLen(frame));
     freeswitch_Session_WriteFrame(session, frame);
 }
 
