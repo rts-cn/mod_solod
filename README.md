@@ -59,3 +59,21 @@ type Session switch_core_session_t
 So can access C struct members, but you only need to define the members you intend to use.
 
 To export a member for external access, define a getter/setter function. See `frame.go` for an example.
+
+### Embed C
+
+`.h` and `.c` files can be embedded using the `so:embed` directive. `//go:build ignore` needs to be added to `.c` files at the very begining to prevent Go build errors.
+
+### FreeSWITCH Module Conventions
+
+FreeSWITCH requires a `mod_solod_module_interface` to be present, which can be defined using `SWITCH_MODULE_DEFINITION`. So doesn't support exposing structs, so `mod_solod.c` is used for that purpose.
+
+Also, So doesn't support symbol visibility control — symbols exposed to FreeSWITCH must be in C for now.
+
+### Visibility
+
+It's good practice to hide symbols from the shared library and only expose public APIs. This helps prevent symbol conflicts when you have two or more shared libraries that might use different versions of `so_` functions.
+
+So doesn't support visibility control, so you must use a C function marked with `__attribute__((visibility("default")))` or `__declspec(dllexport)`, etc., to make it visible.
+
+`-f visibility=hidden` can be used to hide all symbols.
