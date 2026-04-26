@@ -53,6 +53,8 @@ const freeswitch_LogLevel freeswitch_LOG_INFO = 6;
 
 // -- core.go --
 
+// -- event.go --
+
 // -- frame.go --
 
 uint8_t* freeswitch_Frame_Data(void* self) {
@@ -118,4 +120,35 @@ void freeswitch_Session_WriteFrame(void* self, freeswitch_Frame* frame) {
 void freeswitch_Stream_Write(void* self, so_String s) {
     freeswitch_Stream* stream = self;
     switch_stream_write(stream, so_cstr(s));
+}
+
+// -- xml.go --
+
+freeswitch_XML* freeswitch_XMLRoot_OpenConfig(freeswitch_XMLRoot xml, so_String file) {
+    freeswitch_XML* cfg = NULL;
+    xml.root = switch_xml_open_cfg(so_cstr(file), &cfg, NULL);
+    return cfg;
+}
+
+void freeswitch_XMLRoot_Free(freeswitch_XMLRoot xml) {
+    if (xml.root != NULL) {
+        switch_xml_free(xml.root);
+        xml.root = NULL;
+    }
+}
+
+freeswitch_XML* freeswitch_XML_Next(void* self) {
+    freeswitch_XML* xml = self;
+    return switch_xml_next(xml);
+}
+
+freeswitch_XML* freeswitch_XML_Child(void* self, so_String name) {
+    freeswitch_XML* xml = self;
+    return switch_xml_child(xml, so_cstr(name));
+}
+
+so_String freeswitch_XML_Attr(void* self, so_String attr) {
+    freeswitch_XML* xml = self;
+    cchar_t* val = switch_xml_attr_soft(xml, so_cstr(attr));
+    return c_String((so_byte*)(val));
 }

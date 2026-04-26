@@ -14,3 +14,4 @@
 
 typedef const char cchar_t;   // some functions need a const char *
 #define Writef write_function // stream->write_function
+typedef struct switch_xml switch_xml_node_t;

@@ -27,10 +27,33 @@ func api(cmd *freeswitch.Char, session *freeswitch.Session, stream *freeswitch.S
 	return 0
 }
 
+func config() {
+	xml := freeswitch.XMLRoot{}
+	defer xml.Free()
+	cfg := xml.OpenConfig("sofia.conf")
+	if cfg == nil {
+		freeswitch.Warnf("Open sofia.conf err\n")
+		return
+	}
+	settings := cfg.Child("global_settings")
+	if settings != nil {
+		param := settings.Child("param")
+		for param != nil {
+			key := param.Attr("name")
+			val := param.Attr("value")
+			freeswitch.Debugf("params %s=%s\n", key, val)
+			param = param.Next()
+		}
+	} else {
+		freeswitch.Debugf("no settings\n");
+	}
+}
+
 func OnLoad(module_interface **freeswitch.ModuleInterface) {
 	var apii *freeswitch.APIInterface
 	var appi *freeswitch.AppInterface
 	freeswitch.Infof("Loading ...\n")
+	config()
 	freeswitch.SWITCH_ADD_API(apii, "solod", "solod", api, "solod")
 	freeswitch.SWITCH_ADD_APP(appi, "solod", "solod", "solod", app, "solod", freeswitch.SAF_NONE)
 }
