@@ -1,5 +1,5 @@
 BASE_DIR=/usr/local/freeswitch
-CFLAGS=-I./generated -I$(BASE_DIR)/include/freeswitch # -fvisibility=hidden
+CFLAGS=-I./generated -I$(BASE_DIR)/include/freeswitch -fvisibility=hidden -DSWITCH_API_VISIBILITY=1
 LDFLAGS=-L$(BASE_DIR)/lib -lfreeswitch
 
 UNAME_S := $(shell uname -s)
