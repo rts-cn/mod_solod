@@ -12,7 +12,7 @@ func app(session *freeswitch.Session, data *freeswitch.Char) {
 	// session.Infof("%s", "in app\n")
 	var frame *freeswitch.Frame
 	session.ReadFrame(&frame)
-	freeswitch.Infof("read len=%d\n", frame.DataLen)
+	freeswitch.Infof("read len=%d\n", frame.DataLen())
 	session.WriteFrame(frame)
 }
 
