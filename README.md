@@ -66,7 +66,7 @@ To export a member for external access, define a getter/setter function. See `fr
 
 ### FreeSWITCH Module Conventions
 
-FreeSWITCH requires a `mod_solod_module_interface` to be present, which can be defined using `SWITCH_MODULE_DEFINITION`. So doesn't support exposing structs, so `mod_solod.c` is used for that purpose.
+FreeSWITCH requires a `mod_solod_module_interface` struct to be present, which can be defined using the `SWITCH_MODULE_DEFINITION` macro. So doesn't support exposing structs, so `mod_solod.c` is used for that purpose.
 
 Also, So doesn't support symbol visibility control — symbols exposed to FreeSWITCH must be in C for now.
 
@@ -77,3 +77,5 @@ It's good practice to hide symbols from the shared library and only expose publi
 So doesn't support visibility control, so you must use a C function marked with `__attribute__((visibility("default")))` or `__declspec(dllexport)`, etc., to make it visible.
 
 `-f visibility=hidden` can be used to hide all symbols.
+
+Alternatively, use [Linker Version Scripts](https://www.man7.org/conf/lca2006/shared_libraries/slide18c.html) might be a better idea.
