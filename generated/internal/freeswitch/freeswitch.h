@@ -24,6 +24,11 @@ typedef const char cchar_t;   // some functions need a const char *
 #define Writef write_function // stream->write_function
 typedef struct switch_xml switch_xml_node_t;
 
+typedef struct so_R_ptr_ptr {
+    void *val;
+    void *val2;
+} so_R_ptr_ptr;
+
 // -- Types --
 typedef so_int freeswitch_SwitchModuleInterfaceName;
 typedef switch_api_interface_t freeswitch_APIInterface;
@@ -89,8 +94,8 @@ void freeswitch_Log(freeswitch_LogLevel level, so_String format, so_Slice args);
 void freeswitch_Session_ReadFrame(void* self, freeswitch_Frame** frame);
 void freeswitch_Session_WriteFrame(void* self, freeswitch_Frame* frame);
 void freeswitch_Stream_Write(void* self, so_String s);
-freeswitch_XML* freeswitch_XMLRoot_OpenConfig(freeswitch_XMLRoot xml, so_String file);
-void freeswitch_XMLRoot_Free(freeswitch_XMLRoot xml);
+so_R_ptr_ptr freeswitch_OpenXMLConfig(so_String file);
+void freeswitch_XML_Free(void* self);
 freeswitch_XML* freeswitch_XML_Next(void* self);
 freeswitch_XML* freeswitch_XML_Child(void* self, so_String name);
 so_String freeswitch_XML_Attr(void* self, so_String attr);

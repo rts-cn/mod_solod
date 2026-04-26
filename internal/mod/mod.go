@@ -28,13 +28,12 @@ func api(cmd *freeswitch.Char, session *freeswitch.Session, stream *freeswitch.S
 }
 
 func config() {
-	xml := freeswitch.XMLRoot{}
-	defer xml.Free()
-	cfg := xml.OpenConfig("sofia.conf")
-	if cfg == nil {
+	root, cfg := freeswitch.OpenXMLConfig("sofia.conf")
+	if root == nil || cfg == nil {
 		freeswitch.Warnf("Open sofia.conf err\n")
 		return
 	}
+	defer root.Free()
 	settings := cfg.Child("global_settings")
 	if settings != nil {
 		param := settings.Child("param")

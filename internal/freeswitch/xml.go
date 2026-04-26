@@ -29,16 +29,13 @@ func switch_xml_free(xml *XML)
 //so:extern
 func switch_xml_next(xml *XML) *XML
 
-func (xml XMLRoot)OpenConfig(file string) *XML {
+func OpenXMLConfig(file string) (*XML, *XML) {
 	var cfg *XML
-	xml.root = switch_xml_open_cfg(file, &cfg, nil)
-	return cfg
+	root := switch_xml_open_cfg(file, &cfg, nil)
+	return root, cfg
 }
-func (xml XMLRoot) Free() {
-	if xml.root != nil {
-		switch_xml_free(xml.root)
-		xml.root = nil
-	}
+func (xml *XML) Free() {
+	switch_xml_free(xml)
 }
 
 func (xml *XML) Next() *XML {

@@ -124,17 +124,15 @@ void freeswitch_Stream_Write(void* self, so_String s) {
 
 // -- xml.go --
 
-freeswitch_XML* freeswitch_XMLRoot_OpenConfig(freeswitch_XMLRoot xml, so_String file) {
+so_R_ptr_ptr freeswitch_OpenXMLConfig(so_String file) {
     freeswitch_XML* cfg = NULL;
-    xml.root = switch_xml_open_cfg(so_cstr(file), &cfg, NULL);
-    return cfg;
+    freeswitch_XML* root = switch_xml_open_cfg(so_cstr(file), &cfg, NULL);
+    return (so_R_ptr_ptr){.val = root, .val2 = cfg};
 }
 
-void freeswitch_XMLRoot_Free(freeswitch_XMLRoot xml) {
-    if (xml.root != NULL) {
-        switch_xml_free(xml.root);
-        xml.root = NULL;
-    }
+void freeswitch_XML_Free(void* self) {
+    freeswitch_XML* xml = self;
+    switch_xml_free(xml);
 }
 
 freeswitch_XML* freeswitch_XML_Next(void* self) {

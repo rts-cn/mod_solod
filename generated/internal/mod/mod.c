@@ -29,11 +29,11 @@ static switch_status_t api(cchar_t* cmd, freeswitch_Session* session, freeswitch
 }
 
 static void config(void) {
-    freeswitch_XMLRoot xml = (freeswitch_XMLRoot){};
-    freeswitch_XML* cfg = freeswitch_XMLRoot_OpenConfig(xml, so_str("sofia.conf"));
-    if (cfg == NULL) {
+    so_R_ptr_ptr _res1 = freeswitch_OpenXMLConfig(so_str("sofia.conf"));
+    freeswitch_XML* root = _res1.val;
+    freeswitch_XML* cfg = _res1.val2;
+    if (root == NULL || cfg == NULL) {
         freeswitch_Warnf("Open sofia.conf err\n");
-        freeswitch_XMLRoot_Free(xml);
         return;
     }
     freeswitch_XML* settings = freeswitch_XML_Child(cfg, so_str("global_settings"));
@@ -48,7 +48,7 @@ static void config(void) {
     } else {
         freeswitch_Debugf("no settings\n");
     }
-    freeswitch_XMLRoot_Free(xml);
+    freeswitch_XML_Free(root);
 }
 
 void mod_OnLoad(freeswitch_ModuleInterface** module_interface) {
