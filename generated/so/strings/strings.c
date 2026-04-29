@@ -2,6 +2,9 @@
 
 // -- Types --
 
+typedef struct asciiSet asciiSet;
+typedef struct span span;
+
 // asciiSet is a 32-byte value, where each bit represents the presence of a
 // given ASCII character in the set. The 128-bits of the lower 16 bytes,
 // starting with the least-significant bit of the lowest word to the

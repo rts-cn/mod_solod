@@ -6,6 +6,13 @@
 
 // -- Types --
 
+typedef struct io_RuneSizeResult io_RuneSizeResult;
+typedef struct io_DiscardWriter io_DiscardWriter;
+typedef struct io_LimitedReader io_LimitedReader;
+typedef struct io_NopCloser io_NopCloser;
+typedef struct io_SectionReader io_SectionReader;
+typedef struct io_ReaderAtOffset io_ReaderAtOffset;
+
 // Reader is the interface that wraps the basic Read method.
 //
 // Read reads up to len(p) bytes into p. It returns the number of bytes

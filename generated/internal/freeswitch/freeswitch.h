@@ -30,6 +30,8 @@ typedef struct so_R_ptr_ptr {
 } so_R_ptr_ptr;
 
 // -- Types --
+
+typedef struct freeswitch_XMLRoot freeswitch_XMLRoot;
 typedef so_int freeswitch_SwitchModuleInterfaceName;
 typedef switch_api_interface_t freeswitch_APIInterface;
 typedef switch_application_interface_t freeswitch_AppInterface;

@@ -2,6 +2,8 @@
 
 // -- Types --
 
+typedef struct acceptRange acceptRange;
+
 // acceptRange gives the range of valid values for the second byte in a UTF-8
 // sequence.
 typedef struct acceptRange {

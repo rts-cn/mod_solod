@@ -3,6 +3,11 @@
 
 // -- Types --
 
+typedef struct unicode_RangeTable unicode_RangeTable;
+typedef struct unicode_Range16 unicode_Range16;
+typedef struct unicode_Range32 unicode_Range32;
+typedef struct unicode_CaseRange unicode_CaseRange;
+
 // to make the CaseRanges text shorter
 typedef so_rune unicode_D[3];
 

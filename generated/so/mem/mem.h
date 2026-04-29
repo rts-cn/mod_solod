@@ -30,6 +30,12 @@ static inline void mem_SwapByte(void* a, void* b, so_int n) {
 
 // -- Types --
 
+typedef struct mem_Stats mem_Stats;
+typedef struct mem_Arena mem_Arena;
+typedef struct mem_NoAllocator mem_NoAllocator;
+typedef struct mem_SystemAllocator mem_SystemAllocator;
+typedef struct mem_Tracker mem_Tracker;
+
 // Allocator defines the interface for memory allocators.
 // Whether allocated or reallocated memory is zeroed is allocator-specific.
 typedef struct mem_Allocator {
