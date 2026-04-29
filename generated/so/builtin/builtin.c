@@ -5,6 +5,9 @@
 // Nil sentinel: address used as the pointer for nil/empty slices.
 so_byte so_Nil[] = {0};
 
+// Command-line arguments, populated by main().
+so_Slice os_Args = {&so_Nil, 0, 0};
+
 // utf8_decode decodes one UTF-8 rune from string s at byte offset i.
 // Stores the byte width in *w.
 // Returns the decoded rune, or 0xFFFD for invalid UTF-8.

@@ -589,6 +589,20 @@ static inline void* unsafe_SliceData(so_Slice s) {
     return s.ptr;
 }
 
+// --- OS intrinsics ---
+
+// Command-line arguments, populated by main().
+extern so_Slice os_Args;
+
+// so_args_init populates os_Args from C argc/argv.
+// buf must be a so_String array of at least argc elements (VLA on main's stack).
+static inline void so_args_init(int argc, char* argv[], so_String* buf) {
+    for (int i = 0; i < argc; i++) {
+        buf[i] = (so_String){argv[i], (so_int)strlen(argv[i])};
+    }
+    os_Args = (so_Slice){buf, (so_int)argc, (so_int)argc};
+}
+
 // --- Map type ---
 
 // Map is an open-addressed hash table with MSI (mask-step-index) probing.
