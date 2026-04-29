@@ -2,11 +2,11 @@ package mod
 
 import (
 	"solod.dev/so/fmt"
-	// "solod.dev/so/strings"
+	"solod.dev/so/c"
 	"mod_solod/internal/freeswitch"
 )
 
-func app(session *freeswitch.Session, data *freeswitch.Char) {
+func app(session *freeswitch.Session, data *c.ConstChar) {
 	freeswitch.Infof("app\n")
 	// session.Infof("in app\n")
 	// session.Infof("%s", "in app\n")
@@ -16,7 +16,7 @@ func app(session *freeswitch.Session, data *freeswitch.Char) {
 	session.WriteFrame(frame)
 }
 
-func api(cmd *freeswitch.Char, session *freeswitch.Session, stream *freeswitch.Stream) freeswitch.Status {
+func api(cmd *c.ConstChar, session *freeswitch.Session, stream *freeswitch.Stream) freeswitch.Status {
 	stream.Write("blah blah\n")
 	buf := fmt.NewBuffer(64)
 	s := fmt.Sprintf(buf, "%s\n", "blah")

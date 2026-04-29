@@ -20,7 +20,6 @@
 #define freeswitch_Session_Warnf(s, ...) switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(s), SWITCH_LOG_WARNING, __VA_ARGS__)
 #define freeswitch_Session_Noticef(s, ...) switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(s), SWITCH_LOG_NOTICE, __VA_ARGS__)
 
-typedef const char cchar_t;   // some functions need a const char *
 #define Writef write_function // stream->write_function
 typedef struct switch_xml switch_xml_node_t;
 
@@ -44,9 +43,9 @@ typedef switch_core_session_t freeswitch_Session;
 typedef switch_loadable_module_interface_t freeswitch_ModuleInterface;
 typedef switch_stream_handle_t freeswitch_Stream;
 
-typedef switch_status_t (*freeswitch_APIFunc)(cchar_t*, freeswitch_Session*, freeswitch_Stream*);
+typedef switch_status_t (*freeswitch_APIFunc)(so_const_char*, freeswitch_Session*, freeswitch_Stream*);
 
-typedef void (*freeswitch_AppFunc)(freeswitch_Session*, cchar_t*);
+typedef void (*freeswitch_AppFunc)(freeswitch_Session*, so_const_char*);
 typedef so_int freeswitch_LogLevel;
 
 // *(switch_xml_t) xml element

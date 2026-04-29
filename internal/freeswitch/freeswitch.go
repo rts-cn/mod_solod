@@ -29,13 +29,8 @@ type switch_stream_handle_t struct {
 	Writef StreamWriteFunc
 }
 type Stream switch_stream_handle_t
-type APIFunc func(cmd *Char, session *Session, stream *Stream) Status
-type AppFunc func(session *Session, data *Char)
-
-//so:extern cchar_t
-type char byte
-//so:extern cchar_t
-type Char byte
+type APIFunc func(cmd *c.ConstChar, session *Session, stream *Stream) Status
+type AppFunc func(session *Session, data *c.ConstChar)
 
 func Init() { // todo, this function is incomplete
 	flags := c.Val[Bool]("SWITCH_TRUE")

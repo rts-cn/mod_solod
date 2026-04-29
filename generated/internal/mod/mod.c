@@ -1,13 +1,13 @@
 #include "mod.h"
 
 // -- Forward declarations --
-static void app(freeswitch_Session* session, cchar_t* data);
-static switch_status_t api(cchar_t* cmd, freeswitch_Session* session, freeswitch_Stream* stream);
+static void app(freeswitch_Session* session, so_const_char* data);
+static switch_status_t api(so_const_char* cmd, freeswitch_Session* session, freeswitch_Stream* stream);
 static void config(void);
 
 // -- Implementation --
 
-static void app(freeswitch_Session* session, cchar_t* data) {
+static void app(freeswitch_Session* session, so_const_char* data) {
     freeswitch_Infof("app\n");
     // session.Infof("in app\n")
     // session.Infof("%s", "in app\n")
@@ -17,7 +17,7 @@ static void app(freeswitch_Session* session, cchar_t* data) {
     freeswitch_Session_WriteFrame(session, frame);
 }
 
-static switch_status_t api(cchar_t* cmd, freeswitch_Session* session, freeswitch_Stream* stream) {
+static switch_status_t api(so_const_char* cmd, freeswitch_Session* session, freeswitch_Stream* stream) {
     freeswitch_Stream_Write(stream, so_str("blah blah\n"));
     fmt_Buffer buf = fmt_NewBuffer(64);
     so_String s = fmt_Sprintf(buf, "%s\n", "blah");
