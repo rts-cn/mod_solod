@@ -183,10 +183,8 @@ void mem_Arena_Reset(void* self);
         so_R_ptr_err _res1 = _a.Alloc(_a.self, _esize * _cap, _align); \
         _ptr = _res1.val; \
         _err = _res1.err; \
-    } else { \
-        _ptr = &so_Nil; \
     } \
-    so_Slice _ts = {&so_Nil, 0, 0}; \
+    so_Slice _ts = {0}; \
     if (_err == NULL) { \
         _ts = c_Slice(T, (c_PtrAs(T, (_ptr))), (_len), (_cap)); \
     } \
@@ -230,7 +228,6 @@ void mem_Arena_Reset(void* self);
         if (_oldCap > 0) { \
             _a.Free(_a.self, unsafe_SliceData(slice_), _esize * _oldCap, _align); \
         } \
-        _newPtr = &so_Nil; \
     } else if (_oldCap == 0) { \
         so_R_ptr_err _res1 = _a.Alloc(_a.self, _esize * _newCap, _align); \
         _newPtr = _res1.val; \
@@ -241,7 +238,7 @@ void mem_Arena_Reset(void* self);
         _newPtr = _res2.val; \
         _err = _res2.err; \
     } \
-    so_Slice _s = {&so_Nil, 0, 0}; \
+    so_Slice _s = {0}; \
     if (_err == NULL) { \
         _s = c_Slice(T, (c_PtrAs(T, (_newPtr))), (_newLen), (_newCap)); \
     } \

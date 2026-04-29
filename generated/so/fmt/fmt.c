@@ -49,7 +49,7 @@ so_R_int_err fmt_Printf(const char* format, ...) {
 so_String fmt_Sprintf(fmt_Buffer buf, const char* format, ...) {
     va_list args;
     va_start(args, format);
-    int n = vsnprintf((char*)buf.Ptr, (size_t)buf.Len, format, args);
+    int n = vsnprintf(buf.Ptr, (size_t)buf.Len, format, args);
     va_end(args);
 
     if (n < 0) {
@@ -57,7 +57,7 @@ so_String fmt_Sprintf(fmt_Buffer buf, const char* format, ...) {
     } else if (n >= buf.Len) {
         n = buf.Len - 1;  // truncate output to fit buffer
     }
-    return (so_String){.ptr = (char*)buf.Ptr, .len = n};
+    return (so_String){.ptr = buf.Ptr, .len = n};
 }
 
 so_R_int_err fmt_Fprintf(io_Writer w, const char* format, ...) {
@@ -122,11 +122,12 @@ so_R_int_err fmt_Fscanf(io_Reader r, const char* format, ...) {
 // BufferFrom creates a Buffer that uses the provided byte slice as its storage.
 // The buffer doesn't take ownership of the slice and doesn't free it.
 fmt_Buffer fmt_BufferFrom(so_Slice buf) {
-    return (fmt_Buffer){.Ptr = &so_at(so_byte, buf, 0), .Len = so_len(buf)};
+    so_byte* ptr = unsafe_SliceData(buf);
+    return (fmt_Buffer){.Ptr = (char*)(ptr), .Len = so_len(buf)};
 }
 
 // String returns the contents of the Buffer as a string,
 // up to the first null byte.
 so_String fmt_Buffer_String(fmt_Buffer b) {
-    return c_String(b.Ptr);
+    return c_String(char, (b.Ptr));
 }

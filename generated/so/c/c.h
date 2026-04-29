@@ -7,6 +7,8 @@
 #include <string.h>
 #include "so/builtin/builtin.h"
 
+#define so_const_char const char
+
 #define c_Alignof(T) ((so_int)alignof(T))
 
 #define c_Alloca(T, n) ((T*)so_alloca(sizeof(T) * (size_t)(n)))
@@ -16,7 +18,7 @@ static inline void c_Assert(bool cond, const char* msg) {
 }
 
 static inline so_Slice c_Bytes(void* ptr, so_int n) {
-    return ptr ? (so_Slice){ptr, n, n} : (so_Slice){&so_Nil, 0, 0};
+    return ptr ? (so_Slice){ptr, n, n} : (so_Slice){0};
 }
 
 static inline char* c_CharPtr(void* ptr) {
@@ -32,11 +34,11 @@ static inline char* c_CharPtr(void* ptr) {
 #define c_Sizeof(T) ((so_int)sizeof(T))
 
 #define c_Slice(T, ptr, len, cap) \
-    (ptr ? (so_Slice){(ptr), (len), (cap)} : (so_Slice){&so_Nil, 0, 0})
+    (ptr ? (so_Slice){(ptr), (len), (cap)} : (so_Slice){0})
 
-static inline so_String c_String(void* ptr) {
-    char* s = (char*)(ptr);
-    return ptr ? (so_String){s, (so_int)strlen(s)} : (so_String){(char*)&so_Nil, 0};
-}
+#define c_String(T, ptr) ({                                            \
+    const char* _ptr = (const char*)(ptr);                             \
+    (_ptr ? (so_String){_ptr, (so_int)strlen(_ptr)} : (so_String){0}); \
+})
 
 #define c_Zero(T) ((T){0})

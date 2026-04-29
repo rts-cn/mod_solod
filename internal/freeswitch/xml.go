@@ -21,7 +21,7 @@ func switch_xml_child(xml *XML, name string) *XML
 func switch_xml_attr(xml *XML, attr string) string
 
 //so:extern
-func switch_xml_attr_soft(xml *XML, attr string) *char
+func switch_xml_attr_soft(xml *XML, attr string) *c.ConstChar
 
 //so:extern
 func switch_xml_free(xml *XML)
@@ -48,5 +48,5 @@ func (xml *XML) Child(name string) *XML {
 
 func (xml *XML) Attr(attr string) string {
 	val := switch_xml_attr_soft(xml, attr)
-	return c.String((*byte)(val))
+	return c.String(val)
 }

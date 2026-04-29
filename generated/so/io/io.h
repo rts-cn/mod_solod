@@ -12,6 +12,8 @@ typedef struct io_LimitedReader io_LimitedReader;
 typedef struct io_NopCloser io_NopCloser;
 typedef struct io_SectionReader io_SectionReader;
 typedef struct io_ReaderAtOffset io_ReaderAtOffset;
+typedef struct io_MultiReader io_MultiReader;
+typedef struct io_MultiWriter io_MultiWriter;
 
 // Reader is the interface that wraps the basic Read method.
 //
@@ -331,6 +333,14 @@ typedef struct io_ReaderAtOffset {
     int64_t N;
 } io_ReaderAtOffset;
 
+typedef struct io_MultiReader {
+    so_Slice readers;
+} io_MultiReader;
+
+typedef struct io_MultiWriter {
+    so_Slice writers;
+} io_MultiWriter;
+
 // -- Variables and constants --
 
 // Discard is a [Writer] on which all Write calls
@@ -381,6 +391,9 @@ extern so_Error io_ErrUnread;
 
 // ErrWhence is returned by seek functions when the whence argument is invalid.
 extern so_Error io_ErrWhence;
+
+// ErrClosedPipe is the error used for read or write operations on a closed pipe.
+extern so_Error io_ErrClosedPipe;
 
 // -- Functions and methods --
 so_R_int_err io_DiscardWriter_Write(void* self, so_Slice p);
@@ -452,3 +465,21 @@ so_R_int_err io_ReadFull(io_Reader r, so_Slice buf);
 // WriteString writes the contents of the string s to w, which accepts a slice of bytes.
 // [Writer.Write] is called exactly once.
 so_R_int_err io_WriteString(io_Writer w, so_String s);
+so_R_int_err io_MultiReader_Read(void* self, so_Slice p);
+so_R_i64_err io_MultiReader_WriteTo(void* self, io_Writer w);
+
+// NewMultiReader returns a Reader that's the logical concatenation of
+// the provided input readers. They're read sequentially. Once all
+// inputs have returned EOF, Read will return EOF.  If any of the readers
+// return a non-nil, non-EOF error, Read will return that error.
+io_MultiReader io_NewMultiReader(so_Slice readers);
+so_R_int_err io_MultiWriter_Write(void* self, so_Slice p);
+so_R_int_err io_MultiWriter_WriteString(void* self, so_String s);
+
+// NewMultiWriter creates a writer that duplicates its writes to all the
+// provided writers, similar to the Unix tee(1) command.
+//
+// Each write is written to each listed writer, one at a time.
+// If a listed writer returns an error, that overall write operation
+// stops and returns the error; it does not continue down the list.
+io_MultiWriter io_NewMultiWriter(so_Slice writers);

@@ -71,16 +71,16 @@ uint32_t freeswitch_Frame_DataLen(void* self) {
 
 void freeswitch_Init(void) {
     // todo, this function is incomplete
-    so_int flags = 0;
-    so_int console = 1;
-    cchar_t* err = NULL;
+    freeswitch_Bool flags = SWITCH_TRUE;
+    uint32_t console = SCF_USE_SQL;
+    so_const_char* err = NULL;
     so_int loop = 0;
     so_println("%s", "Hello, MySWITCH is running ...\n");
     switch_core_set_globals();
     switch_core_init_and_modload(flags, console, &err);
-    so_String errStr = c_String((so_byte*)(err));
-    so_println("%s %.*s", "err:", errStr.len, errStr.ptr);
-    freeswitch_Infof("%s", "blah\n");
+    if ((err != NULL)) {
+        freeswitch_Errorf("error: %s", err);
+    }
     switch_core_runtime_loop(loop);
 }
 
@@ -147,6 +147,6 @@ freeswitch_XML* freeswitch_XML_Child(void* self, so_String name) {
 
 so_String freeswitch_XML_Attr(void* self, so_String attr) {
     freeswitch_XML* xml = self;
-    cchar_t* val = switch_xml_attr_soft(xml, so_cstr(attr));
-    return c_String((so_byte*)(val));
+    so_const_char* val = switch_xml_attr_soft(xml, so_cstr(attr));
+    return c_String(so_const_char, (val));
 }

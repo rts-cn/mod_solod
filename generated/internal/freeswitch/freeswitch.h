@@ -37,6 +37,7 @@ typedef switch_api_interface_t freeswitch_APIInterface;
 typedef switch_application_interface_t freeswitch_AppInterface;
 typedef uint32_t freeswitch_ApplicationFlag;
 typedef uint32_t freeswitch_IOFlag;
+typedef uint32_t freeswitch_Bool;
 typedef switch_event_t freeswitch_Event;
 typedef switch_frame_t freeswitch_Frame;
 typedef switch_core_session_t freeswitch_Session;

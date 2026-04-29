@@ -7,7 +7,7 @@ import (
 	// "unsafe"
 )
 
-//so:include <switch.h>
+//so:include.c <switch.h>
 //so:embed embed.h
 var embed_h string
 //so:embed embed.c
@@ -38,16 +38,16 @@ type char byte
 type Char byte
 
 func Init() { // todo, this function is incomplete
-	flags := 0
-	console := 1
-	var err *char
+	flags := c.Val[Bool]("SWITCH_TRUE")
+	console := c.Val[uint32]("SCF_USE_SQL")
+	var err *c.ConstChar
 	loop := 0
 
 	println("Hello, MySWITCH is running ...\n")
 	switch_core_set_globals()
 	switch_core_init_and_modload(flags, console, &err)
-	errStr := c.String((*byte)(err))
-	println("err:", errStr)
-	Infof("%s", "blah\n")
+	if (err != nil) {
+		Errorf("error: %s", err)
+	}
 	switch_core_runtime_loop(loop)
 }

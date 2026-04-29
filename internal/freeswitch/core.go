@@ -1,7 +1,7 @@
 package freeswitch
 
 import (
-	// "solod.dev/so/c"
+	"solod.dev/so/c"
 	// "solod.dev/so/fmt"
 )
 
@@ -49,6 +49,9 @@ const (
 //so:extern
 type switch_io_flag_t uint32
 type IOFlag switch_io_flag_t
+//so:extern
+type switch_bool_t uint32
+type Bool switch_bool_t
 
 const (
 	SWITCH_IO_FLAG_NONE IOFlag = 0
@@ -61,7 +64,7 @@ const (
 //so:extern
 func switch_core_set_globals()
 //so:extern
-func switch_core_init_and_modload(flags int, console int, err **char)
+func switch_core_init_and_modload(flags Bool, console uint32, err **c.ConstChar)
 //so:extern
 func switch_core_runtime_loop(int)
 

@@ -104,7 +104,7 @@ void strings_Builder_Reset(void* self) {
 void strings_Builder_Free(void* self) {
     strings_Builder* b = self;
     mem_FreeSlice(so_byte, (b->a), (b->buf));
-    b->buf = (so_Slice){&so_Nil, 0, 0};
+    b->buf = (so_Slice){0};
 }
 
 // Grow grows b's capacity, if necessary, to guarantee space for
@@ -937,7 +937,7 @@ so_Slice strings_FieldsFunc(mem_Allocator a, so_String s, strings_RunePredicate 
 // The substrings in the slice are references to the original string s.
 static so_Slice genSplit(mem_Allocator a, so_String s, so_String sep, so_int sepSave, so_int n) {
     if (n == 0) {
-        return (so_Slice){&so_Nil, 0, 0};
+        return (so_Slice){0};
     }
     if (so_string_eq(sep, so_str(""))) {
         return explode(a, s, n);
