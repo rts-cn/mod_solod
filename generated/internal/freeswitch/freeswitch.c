@@ -90,12 +90,18 @@ void freeswitch_Log(freeswitch_LogLevel level, so_String format, so_Slice args) 
     strings_Builder sb = {0};
     so_R_int_err _res1 = fmt_Fprintf((io_Writer){.self = &sb, .Write = strings_Builder_Write}, so_cstr(format), so_decay(args));
     so_Error err = _res1.err;
-    // switch_log_printf(0, "", "", 0, nil, level, format, sb.String())
-    // switch_log_printf(0, "", "", 0, nil, level, format, args...)
     if (err != NULL) {
         strings_Builder_Free(&sb);
         so_panic(err->msg);
     }
+    so_String s = strings_Builder_String(&sb);
+    if (so_string_ne(s, so_str(""))) {
+        // fix: declared and not used: s
+        switch_log_printf(SWITCH_CHANNEL_LOG, level, so_cstr(format), s);
+    }
+    // spreading variadic arguments to an extern function is not supported
+    // switch_log_printf(0, "", "", 0, nil, level, format, args...)
+    switch_log_printf(0, "", "", 0, NULL, level, so_cstr(format), so_cstr(strings_Builder_String(&sb)));
     strings_Builder_Free(&sb);
 }
 
