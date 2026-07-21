@@ -5,8 +5,8 @@
 
 // -- Embeds --
 
-#include <assert.h>
 #include "so/builtin/builtin.h"
+#include <assert.h>
 #define so_assert(x, y) assert(x)
 
 // SwapByte swaps n bytes between a and b.

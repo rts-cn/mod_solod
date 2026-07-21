@@ -52,6 +52,7 @@ func OnLoad(module_interface **freeswitch.ModuleInterface) {
 	var apii *freeswitch.APIInterface
 	var appi *freeswitch.AppInterface
 	freeswitch.Infof("Loading solod ...\n")
+	freeswitch.Log(6, "Loading solod ...\n")
 	config()
 	freeswitch.SWITCH_ADD_API(apii, "solod", "solod", api, "solod")
 	freeswitch.SWITCH_ADD_APP(appi, "solod", "solod", "solod", app, "solod", freeswitch.SAF_NONE)
