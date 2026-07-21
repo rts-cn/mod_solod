@@ -29,11 +29,11 @@ static switch_status_t api(const char* cmd, freeswitch_Session* session, freeswi
 }
 
 static void config(void) {
-    so_R_ptr_ptr _res1 = freeswitch_OpenXMLConfig(so_str("sofia.conf"));
+    so_R_ptr_ptr _res1 = freeswitch_OpenXMLConfig(so_str("solod.conf"));
     freeswitch_XML* root = _res1.val;
     freeswitch_XML* cfg = _res1.val2;
     if (root == NULL || cfg == NULL) {
-        freeswitch_Warnf("Open sofia.conf err\n");
+        freeswitch_Warnf("Open solod.conf err\n");
         return;
     }
     freeswitch_XML* settings = freeswitch_XML_Child(cfg, so_str("global_settings"));

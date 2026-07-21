@@ -28,9 +28,9 @@ func api(cmd *c.ConstChar, session *freeswitch.Session, stream *freeswitch.Strea
 }
 
 func config() {
-	root, cfg := freeswitch.OpenXMLConfig("sofia.conf")
+	root, cfg := freeswitch.OpenXMLConfig("solod.conf")
 	if root == nil || cfg == nil {
-		freeswitch.Warnf("Open sofia.conf err\n")
+		freeswitch.Warnf("Open solod.conf err\n")
 		return
 	}
 	defer root.Free()
