@@ -173,7 +173,47 @@ bool strings_ContainsFunc(so_String s, strings_RunePredicate f) {
 
 // Index returns the index of the first instance of substr in s, or -1 if substr is not present in s.
 so_int strings_Index(so_String s, so_String substr) {
-    return stringslite_Index(s, substr);
+    so_int n = so_len(substr);
+    if (n == 0) {
+        return 0;
+    } else if (n == 1) {
+        return strings_IndexByte(s, so_at(so_byte, substr, 0));
+    } else if (n == so_len(s)) {
+        if (so_string_eq(substr, s)) {
+            return 0;
+        }
+        return -1;
+    } else if (n > so_len(s)) {
+        return -1;
+    }
+    so_byte c0 = so_at(so_byte, substr, 0);
+    so_byte c1 = so_at(so_byte, substr, 1);
+    so_int i = 0;
+    so_int t = so_len(s) - n + 1;
+    so_int fails = 0;
+    for (; i < t;) {
+        if (so_at(so_byte, s, i) != c0) {
+            so_int o = strings_IndexByte(so_string_slice(s, i + 1, t), c0);
+            if (o < 0) {
+                return -1;
+            }
+            i += o + 1;
+        }
+        if (so_at(so_byte, s, i + 1) == c1 && so_string_eq(so_string_slice(s, i, i + n), substr)) {
+            return i;
+        }
+        i++;
+        fails++;
+        if (fails >= (4 + (i >> 4)) && i < t) {
+            // See comment in [bytes.Index].
+            so_int j = bytealg_IndexRabinKarp(so_string_bytes(so_string_slice(s, i, s.len)), so_string_bytes(substr));
+            if (j < 0) {
+                return -1;
+            }
+            return i + j;
+        }
+    }
+    return -1;
 }
 
 // LastIndex returns the index of the last instance of substr in s, or -1 if substr is not present in s.
@@ -216,7 +256,7 @@ so_int strings_LastIndex(so_String s, so_String substr) {
 
 // IndexByte returns the index of the first instance of c in s, or -1 if c is not present in s.
 so_int strings_IndexByte(so_String s, so_byte c) {
-    return stringslite_IndexByte(s, c);
+    return bytealg_IndexByteString(s, c);
 }
 
 // IndexRune returns the index of the first instance of the Unicode code point
@@ -392,7 +432,7 @@ so_String strings_ToUpper(mem_Allocator a, so_String s) {
     if (isASCII) {
         // optimize for ASCII-only strings.
         if (!hasLower) {
-            return stringslite_Clone(a, s);
+            return strings_Clone(a, s);
         }
         strings_Builder b = (strings_Builder){.a = a};
         so_int pos = 0;
@@ -432,7 +472,7 @@ so_String strings_ToLower(mem_Allocator a, so_String s) {
     if (isASCII) {
         // optimize for ASCII-only strings.
         if (!hasUpper) {
-            return stringslite_Clone(a, s);
+            return strings_Clone(a, s);
         }
         strings_Builder b = (strings_Builder){.a = a};
         so_int pos = 0;
@@ -495,7 +535,7 @@ so_String strings_Map(mem_Allocator a, strings_RuneFunc mapping, so_String s) {
     // Fast path for unchanged input
     if (strings_Builder_Cap(&b) == 0) {
         // didn't call b.Grow above
-        return stringslite_Clone(a, s);
+        return strings_Clone(a, s);
     }
     for (so_int _ = 0, __w = 0; _ < so_len(s); _ += __w) {
         __w = 0;
@@ -694,7 +734,7 @@ so_String strings_Repeat(mem_Allocator a, so_String s, so_int count) {
     if (count == 0) {
         return so_str("");
     } else if (count == 1) {
-        return stringslite_Clone(a, s);
+        return strings_Clone(a, s);
     }
     // Since we cannot return an error on overflow,
     // we should panic if the repeat will generate an overflow.
@@ -716,15 +756,15 @@ so_String strings_Repeat(mem_Allocator a, so_String s, so_int count) {
     // Optimize for commonly repeated strings of relatively short length.
     if (so_at(so_byte, s, 0) == ' ' || so_at(so_byte, s, 0) == '-' || so_at(so_byte, s, 0) == '0' || so_at(so_byte, s, 0) == '=' || so_at(so_byte, s, 0) == '\t') {
         if (n <= so_len(repeatedSpaces) && strings_HasPrefix(repeatedSpaces, s)) {
-            return stringslite_Clone(a, so_string_slice(repeatedSpaces, 0, n));
+            return strings_Clone(a, so_string_slice(repeatedSpaces, 0, n));
         } else if (n <= so_len(repeatedDashes) && strings_HasPrefix(repeatedDashes, s)) {
-            return stringslite_Clone(a, so_string_slice(repeatedDashes, 0, n));
+            return strings_Clone(a, so_string_slice(repeatedDashes, 0, n));
         } else if (n <= so_len(repeatedZeroes) && strings_HasPrefix(repeatedZeroes, s)) {
-            return stringslite_Clone(a, so_string_slice(repeatedZeroes, 0, n));
+            return strings_Clone(a, so_string_slice(repeatedZeroes, 0, n));
         } else if (n <= so_len(repeatedEquals) && strings_HasPrefix(repeatedEquals, s)) {
-            return stringslite_Clone(a, so_string_slice(repeatedEquals, 0, n));
+            return strings_Clone(a, so_string_slice(repeatedEquals, 0, n));
         } else if (n <= so_len(repeatedTabs) && strings_HasPrefix(repeatedTabs, s)) {
-            return stringslite_Clone(a, so_string_slice(repeatedTabs, 0, n));
+            return strings_Clone(a, so_string_slice(repeatedTabs, 0, n));
         }
     }
     // Past a certain chunk size it is counterproductive to use
@@ -1005,7 +1045,12 @@ static so_Slice explode(mem_Allocator a, so_String s, so_int n) {
 // If the allocator is nil, uses the system allocator.
 // The returned string is allocated; the caller owns it.
 so_String strings_Clone(mem_Allocator a, so_String s) {
-    return stringslite_Clone(a, s);
+    if (so_len(s) == 0) {
+        return so_str("");
+    }
+    so_Slice b = mem_AllocSlice(so_byte, (a), (so_len(s)), (so_len(s)));
+    so_copy_string(b, s);
+    return so_bytes_string(b);
 }
 
 // Compare returns an integer comparing two strings lexicographically.
@@ -1043,7 +1088,13 @@ so_int strings_Count(so_String s, so_String substr) {
 // returning the text before and after sep.
 // If sep does not appear in s, cut returns s, "".
 so_R_str_str strings_Cut(so_String s, so_String sep) {
-    return stringslite_Cut(s, sep);
+    {
+        so_int i = strings_Index(s, sep);
+        if (i >= 0) {
+            return (so_R_str_str){.val = so_string_slice(s, 0, i), .val2 = so_string_slice(s, i + so_len(sep), s.len)};
+        }
+    }
+    return (so_R_str_str){.val = s, .val2 = so_str("")};
 }
 
 // CutPrefix returns s without the provided leading prefix string
@@ -1051,7 +1102,10 @@ so_R_str_str strings_Cut(so_String s, so_String sep) {
 // If s doesn't start with prefix, CutPrefix returns s, false.
 // If prefix is the empty string, CutPrefix returns s, true.
 so_R_str_bool strings_CutPrefix(so_String s, so_String prefix) {
-    return stringslite_CutPrefix(s, prefix);
+    if (!strings_HasPrefix(s, prefix)) {
+        return (so_R_str_bool){.val = s, .val2 = false};
+    }
+    return (so_R_str_bool){.val = so_string_slice(s, so_len(prefix), s.len), .val2 = true};
 }
 
 // CutSuffix returns s without the provided ending suffix string
@@ -1059,7 +1113,10 @@ so_R_str_bool strings_CutPrefix(so_String s, so_String prefix) {
 // If s doesn't end with suffix, CutSuffix returns s, false.
 // If suffix is the empty string, CutSuffix returns s, true.
 so_R_str_bool strings_CutSuffix(so_String s, so_String suffix) {
-    return stringslite_CutSuffix(s, suffix);
+    if (!strings_HasSuffix(s, suffix)) {
+        return (so_R_str_bool){.val = s, .val2 = false};
+    }
+    return (so_R_str_bool){.val = so_string_slice(s, 0, so_len(s) - so_len(suffix)), .val2 = true};
 }
 
 // Join concatenates the elements of its first argument to create a single string.
@@ -1072,7 +1129,7 @@ so_String strings_Join(mem_Allocator a, so_Slice elems, so_String sep) {
     if (so_len(elems) == 0) {
         return so_str("");
     } else if (so_len(elems) == 1) {
-        return stringslite_Clone(a, so_at(so_String, elems, 0));
+        return strings_Clone(a, so_at(so_String, elems, 0));
     }
     so_int n = 0;
     if (so_len(sep) > 0) {
@@ -1101,12 +1158,12 @@ so_String strings_Join(mem_Allocator a, so_Slice elems, so_String sep) {
 
 // HasPrefix reports whether the string s begins with prefix.
 bool strings_HasPrefix(so_String s, so_String prefix) {
-    return stringslite_HasPrefix(s, prefix);
+    return so_len(s) >= so_len(prefix) && so_string_eq(so_string_slice(s, 0, so_len(prefix)), prefix);
 }
 
 // HasSuffix reports whether the string s ends with suffix.
 bool strings_HasSuffix(so_String s, so_String suffix) {
-    return stringslite_HasSuffix(s, suffix);
+    return so_len(s) >= so_len(suffix) && so_string_eq(so_string_slice(s, so_len(s) - so_len(suffix), s.len), suffix);
 }
 
 // Replace returns a copy of the string s with the first n
@@ -1122,13 +1179,13 @@ bool strings_HasSuffix(so_String s, so_String suffix) {
 // The returned string is allocated; the caller owns it.
 so_String strings_Replace(mem_Allocator a, so_String s, so_String old, so_String new, so_int n) {
     if (so_string_eq(old, new) || n == 0) {
-        return stringslite_Clone(a, s);
+        return strings_Clone(a, s);
     }
     // Compute number of replacements.
     {
         so_int m = strings_Count(s, old);
         if (m == 0) {
-            return stringslite_Clone(a, s);
+            return strings_Clone(a, s);
         } else if (n < 0 || m < n) {
             n = m;
         }
@@ -1268,13 +1325,19 @@ so_String strings_TrimSpace(so_String s) {
 // TrimPrefix returns s without the provided leading prefix string.
 // If s doesn't start with prefix, s is returned unchanged.
 so_String strings_TrimPrefix(so_String s, so_String prefix) {
-    return stringslite_TrimPrefix(s, prefix);
+    if (strings_HasPrefix(s, prefix)) {
+        return so_string_slice(s, so_len(prefix), s.len);
+    }
+    return s;
 }
 
 // TrimSuffix returns s without the provided trailing suffix string.
 // If s doesn't end with suffix, s is returned unchanged.
 so_String strings_TrimSuffix(so_String s, so_String suffix) {
-    return stringslite_TrimSuffix(s, suffix);
+    if (strings_HasSuffix(s, suffix)) {
+        return so_string_slice(s, 0, so_len(s) - so_len(suffix));
+    }
+    return s;
 }
 
 // TrimFunc returns a slice of the string s with all leading

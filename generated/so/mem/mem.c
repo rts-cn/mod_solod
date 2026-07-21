@@ -94,6 +94,56 @@ void mem_Arena_Reset(void* self) {
     a->lastStart = 0;
 }
 
+// -- array.go --
+
+// NewArray allocates storage for count values of vsize bytes each.
+// Both vsize and count must be greater than 0.
+// Call [Array.Free] exactly once when done.
+mem_Array mem_NewArray(mem_Allocator alloc, so_int vsize, so_int count) {
+    so_assert(vsize > 0, "mem.NewArray: vsize must be greater than 0");
+    so_assert(count > 0, "mem.NewArray: count must be greater than 0");
+    so_Slice vals = mem_AllocSlice(so_byte, (alloc), (count * vsize), (count * vsize));
+    return (mem_Array){.alloc = alloc, .vals = vals, .vsize = vsize, .count = count};
+}
+
+// Load copies the value at index i into dst.
+// dst must point to storage of at least vsize bytes.
+void mem_Array_Load(void* self, so_int i, void* dst) {
+    mem_Array* a = self;
+    mem_Copy(dst, mem_Array_At(a, i), a->vsize);
+}
+
+// Store copies the value pointed to by v into slot i.
+// v must point to storage of at least vsize bytes.
+void mem_Array_Store(void* self, so_int i, void* v) {
+    mem_Array* a = self;
+    mem_Copy(mem_Array_At(a, i), v, a->vsize);
+}
+
+// At returns a pointer to the value at index i. The pointer stays
+// valid until the slot is overwritten or [Array.Free] is called.
+void* mem_Array_At(void* self, so_int i) {
+    mem_Array* a = self;
+    so_assert(i >= 0 && i < a->count, "mem.Array.At: index out of bounds");
+    so_byte* vptr = unsafe_SliceData(a->vals);
+    return c_PtrAdd(so_byte, (vptr), (i * a->vsize));
+}
+
+// Len returns the number of values.
+so_int mem_Array_Len(void* self) {
+    mem_Array* a = self;
+    return a->count;
+}
+
+// Free releases the memory allocated for the values.
+// After calling Free, the Array is unusable.
+void mem_Array_Free(void* self) {
+    mem_Array* a = self;
+    mem_FreeSlice(so_byte, (a->alloc), (a->vals));
+    a->vals = (so_Slice){0};
+    a->count = 0;
+}
+
 // -- malloc.go --
 
 // -- mem.go --

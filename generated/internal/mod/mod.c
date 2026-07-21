@@ -54,7 +54,7 @@ static void config(void) {
 void mod_OnLoad(freeswitch_ModuleInterface** module_interface) {
     freeswitch_APIInterface* apii = NULL;
     freeswitch_AppInterface* appi = NULL;
-    freeswitch_Infof("Loading ...\n");
+    freeswitch_Infof("Loading solod ...\n");
     config();
     SWITCH_ADD_API(apii, "solod", "solod", api, "solod");
     SWITCH_ADD_APP(appi, "solod", "solod", "solod", app, "solod", freeswitch_SAF_NONE);

@@ -133,13 +133,11 @@ static so_R_rune_int decodeRuneSlow(so_Slice p) {
     so_byte p0 = so_at(so_byte, p, 0);
     uint8_t x = first[p0];
     if (x >= as) {
-        // The following code simulates an additional check for x == xx and
-        // handling the ASCII and invalid cases accordingly. This mask-and-or
-        // approach prevents an additional branch.
-        // Create 0x0000 or 0xFFFF.
-        so_rune mask = (((so_rune)(x) << 31) >> 31);
-        so_rune r = (((so_rune)(so_at(so_byte, p, 0)) & ~mask) | (utf8_RuneError & mask));
-        return (so_R_rune_int){.val = r, .val2 = 1};
+        // x is as (ASCII) or xx (invalid); both are size 1.
+        if (x == xx) {
+            return (so_R_rune_int){.val = utf8_RuneError, .val2 = 1};
+        }
+        return (so_R_rune_int){.val = (so_rune)(p0), .val2 = 1};
     }
     so_int sz = (so_int)(x & 7);
     acceptRange accept = acceptRanges[(x >> 4)];
@@ -198,13 +196,11 @@ static so_R_rune_int decodeRuneInStringSlow(so_String s) {
     so_byte s0 = so_at(so_byte, s, 0);
     uint8_t x = first[s0];
     if (x >= as) {
-        // The following code simulates an additional check for x == xx and
-        // handling the ASCII and invalid cases accordingly. This mask-and-or
-        // approach prevents an additional branch.
-        // Create 0x0000 or 0xFFFF.
-        so_rune mask = (((so_rune)(x) << 31) >> 31);
-        so_rune r = (((so_rune)(so_at(so_byte, s, 0)) & ~mask) | (utf8_RuneError & mask));
-        return (so_R_rune_int){.val = r, .val2 = 1};
+        // x is as (ASCII) or xx (invalid); both are size 1.
+        if (x == xx) {
+            return (so_R_rune_int){.val = utf8_RuneError, .val2 = 1};
+        }
+        return (so_R_rune_int){.val = (so_rune)(s0), .val2 = 1};
     }
     so_int sz = (so_int)(x & 7);
     acceptRange accept = acceptRanges[(x >> 4)];

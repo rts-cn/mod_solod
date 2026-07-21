@@ -4,7 +4,6 @@
 #include "so/io/io.h"
 #include "so/math/bits/bits.h"
 #include "so/mem/mem.h"
-#include "so/stringslite/stringslite.h"
 #include "so/unicode/unicode.h"
 #include "so/unicode/utf8/utf8.h"
 

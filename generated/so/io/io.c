@@ -479,10 +479,10 @@ static so_R_i64_err io_MultiReader_writeToWithBuffer(void* self, io_Writer w, so
 // the provided input readers. They're read sequentially. Once all
 // inputs have returned EOF, Read will return EOF.  If any of the readers
 // return a non-nil, non-EOF error, Read will return that error.
+//
+// NewMultiReader wraps the provided readers without copying.
 io_MultiReader io_NewMultiReader(so_Slice readers) {
-    so_Slice r = so_make_slice(io_Reader, so_len(readers), so_len(readers));
-    so_copy(io_Reader, r, readers);
-    return (io_MultiReader){r};
+    return (io_MultiReader){readers};
 }
 
 so_R_int_err io_MultiWriter_Write(void* self, so_Slice p) {
@@ -535,21 +535,11 @@ so_R_int_err io_MultiWriter_WriteString(void* self, so_String s) {
 // Each write is written to each listed writer, one at a time.
 // If a listed writer returns an error, that overall write operation
 // stops and returns the error; it does not continue down the list.
+//
+// NewMultiWriter wraps the provided writers without copying.
+// It also doesn't flatten nested MultiWriters.
 io_MultiWriter io_NewMultiWriter(so_Slice writers) {
-    so_Slice allWriters = so_make_slice(io_Writer, 0, so_len(writers));
-    for (so_int _ = 0; _ < so_len(writers); _++) {
-        io_Writer w = so_at(io_Writer, writers, _);
-        {
-            bool ok = (w.Write == io_MultiWriter_Write);
-            if (ok) {
-                io_MultiWriter* mw = (io_MultiWriter*)w.self;
-                allWriters = so_extend(io_Writer, allWriters, (mw->writers));
-            } else {
-                allWriters = so_append(io_Writer, allWriters, w);
-            }
-        }
-    }
-    return (io_MultiWriter){allWriters};
+    return (io_MultiWriter){writers};
 }
 
 // -- pipe.go --

@@ -68,7 +68,7 @@ void freeswitch_Log(freeswitch_LogLevel level, so_String format, so_Slice args) 
     }
     // spreading variadic arguments to an extern function is not supported
     // switch_log_printf(0, "", "", 0, nil, level, format, args...)
-    switch_log_printf(0, "", "", 0, NULL, level, so_cstr(format), so_cstr(strings_Builder_String(&sb)));
+    switch_log_printf(0, so_cstr(so_str(__FILE__)), so_cstr(so_str(__func__)), __LINE__, NULL, level, so_cstr(format), so_cstr(strings_Builder_String(&sb)));
     strings_Builder_Free(&sb);
 }
 

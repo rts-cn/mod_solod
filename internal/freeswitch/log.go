@@ -3,8 +3,8 @@ package freeswitch
 import (
 	"solod.dev/so/c"
 	"solod.dev/so/fmt"
+	"solod.dev/so/runtime"
 	"solod.dev/so/strings"
-	// "unsafe"
 )
 
 type LogLevel int
@@ -36,7 +36,7 @@ func Log(level LogLevel, format string, args ...any) {
 	if s != "" { // fix: declared and not used: s
 		c.Raw(`switch_log_printf(SWITCH_CHANNEL_LOG, level, so_cstr(format), s);`)
 	}
-	switch_log_printf(0, "", "", 0, nil, level, format, sb.String())
+	switch_log_printf(0, runtime.FileName, runtime.FuncName, runtime.Line, nil, level, format, sb.String())
 	// spreading variadic arguments to an extern function is not supported
 	// switch_log_printf(0, "", "", 0, nil, level, format, args...)
 }

@@ -2,6 +2,7 @@
 #include "so/builtin/builtin.h"
 #include "so/c/c.h"
 #include "so/fmt/fmt.h"
+#include "so/runtime/runtime.h"
 #include "so/strings/strings.h"
 
 // -- Embeds --

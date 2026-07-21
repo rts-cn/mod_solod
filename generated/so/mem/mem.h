@@ -5,7 +5,9 @@
 
 // -- Embeds --
 
+#include <assert.h>
 #include "so/builtin/builtin.h"
+#define so_assert(x, y) assert(x)
 
 // SwapByte swaps n bytes between a and b.
 // Panics if either a or b is nil.
@@ -13,9 +15,9 @@
 // SwapByte temporarily allocates a buffer of size n
 // on the stack, so it's not suitable for large n.
 static inline void mem_SwapByte(void* a, void* b, so_int n) {
-    assert(a != NULL && "mem: nil pointer");
-    assert(b != NULL && "mem: nil pointer");
-    assert(n >= 0 && "mem: negative size");
+    so_assert(a != NULL, "mem: nil pointer");
+    so_assert(b != NULL, "mem: nil pointer");
+    so_assert(n >= 0, "mem: negative size");
     if (n == 0) return;
 
     size_t size = (size_t)n;
@@ -102,6 +104,7 @@ static inline void free(void* ptr) {
 
 typedef struct mem_Stats mem_Stats;
 typedef struct mem_Arena mem_Arena;
+typedef struct mem_Array mem_Array;
 typedef struct mem_NoAllocator mem_NoAllocator;
 typedef struct mem_SystemAllocator mem_SystemAllocator;
 typedef struct mem_Tracker mem_Tracker;
@@ -132,6 +135,18 @@ typedef struct mem_Arena {
     so_int offset;
     so_int lastStart;
 } mem_Arena;
+
+// Array is a fixed-length collection of equally-sized values stored inline in
+// a single allocation. The element size is fixed at construction, and Store,
+// Load and At operate through untyped (void*) pointers, so Array works with
+// any element type without being generic. Use it as a building block for
+// typed containers.
+typedef struct mem_Array {
+    mem_Allocator alloc;
+    so_Slice vals;
+    so_int vsize;
+    so_int count;
+} mem_Array;
 
 // NoAllocator is an Allocator that returns an error
 // on any allocation. Free is a no-op.
@@ -177,6 +192,30 @@ void mem_Arena_Free(void* self, void* ptr, so_int size, so_int align);
 
 // Reset reclaims all allocated memory, allowing the arena to be reused.
 void mem_Arena_Reset(void* self);
+
+// NewArray allocates storage for count values of vsize bytes each.
+// Both vsize and count must be greater than 0.
+// Call [Array.Free] exactly once when done.
+mem_Array mem_NewArray(mem_Allocator alloc, so_int vsize, so_int count);
+
+// Load copies the value at index i into dst.
+// dst must point to storage of at least vsize bytes.
+void mem_Array_Load(void* self, so_int i, void* dst);
+
+// Store copies the value pointed to by v into slot i.
+// v must point to storage of at least vsize bytes.
+void mem_Array_Store(void* self, so_int i, void* v);
+
+// At returns a pointer to the value at index i. The pointer stays
+// valid until the slot is overwritten or [Array.Free] is called.
+void* mem_Array_At(void* self, so_int i);
+
+// Len returns the number of values.
+so_int mem_Array_Len(void* self);
+
+// Free releases the memory allocated for the values.
+// After calling Free, the Array is unusable.
+void mem_Array_Free(void* self);
 
 // Alloc allocates a single value of type T using allocator a.
 // Returns a pointer to the allocated memory or panics on failure.
@@ -244,10 +283,10 @@ void mem_Arena_Reset(void* self);
     } \
     so_int _len = len_, _cap = cap_; \
     so_int _esize = c_Sizeof(T), _align = c_Alignof(T); \
-    c_Assert(_len >= 0, "mem: negative length"); \
-    c_Assert(_cap >= 0, "mem: negative capacity"); \
-    c_Assert(_len <= _cap, "mem: length exceeds capacity"); \
-    c_Assert(_cap < so_max_int / _esize, "mem: capacity overflow"); \
+    so_assert(_len >= 0, "mem: negative length"); \
+    so_assert(_cap >= 0, "mem: negative capacity"); \
+    so_assert(_len <= _cap, "mem: length exceeds capacity"); \
+    so_assert(_cap < so_max_int / _esize, "mem: capacity overflow"); \
     void* _ptr = NULL; \
     so_Error _err = {0}; \
     if (_cap > 0) { \
@@ -289,10 +328,10 @@ void mem_Arena_Reset(void* self);
     so_int _oldCap = so_cap(slice_); \
     so_int _newLen = newLen_, _newCap = newCap_; \
     so_int _esize = c_Sizeof(T), _align = c_Alignof(T); \
-    c_Assert(_newLen >= 0, "mem: negative length"); \
-    c_Assert(_newCap >= 0, "mem: negative capacity"); \
-    c_Assert(_newLen <= _newCap, "mem: length exceeds capacity"); \
-    c_Assert(_newCap < so_max_int / _esize, "mem: capacity overflow"); \
+    so_assert(_newLen >= 0, "mem: negative length"); \
+    so_assert(_newCap >= 0, "mem: negative capacity"); \
+    so_assert(_newLen <= _newCap, "mem: length exceeds capacity"); \
+    so_assert(_newCap < so_max_int / _esize, "mem: capacity overflow"); \
     void* _newPtr = NULL; \
     so_Error _err = {0}; \
     if (_newCap == 0) { \
@@ -339,8 +378,8 @@ void mem_FreeString(mem_Allocator a, so_String s);
 // Clear zeroes size bytes starting at ptr.
 //
 static inline void mem_Clear(void* ptr, so_int size) {
-    c_Assert(ptr != NULL, "mem: nil pointer");
-    c_Assert(size >= 0, "mem: negative size");
+    so_assert(ptr != NULL, "mem: nil pointer");
+    so_assert(size >= 0, "mem: negative size");
     memset(ptr, 0, (uintptr_t)(size));
 }
 
@@ -350,9 +389,9 @@ static inline void mem_Clear(void* ptr, so_int size) {
 // Panics if either a or b is nil.
 //
 static inline so_int mem_Compare(void* a, void* b, so_int size) {
-    c_Assert(a != NULL, "mem: nil pointer");
-    c_Assert(b != NULL, "mem: nil pointer");
-    c_Assert(size >= 0, "mem: negative size");
+    so_assert(a != NULL, "mem: nil pointer");
+    so_assert(b != NULL, "mem: nil pointer");
+    so_assert(size >= 0, "mem: negative size");
     int res = memcmp(a, b, (uintptr_t)(size));
     if (res < 0) {
         return -1;
@@ -367,9 +406,9 @@ static inline so_int mem_Compare(void* a, void* b, so_int size) {
 // Panics if either dst or src is nil.
 //
 static inline void* mem_Copy(void* dst, void* src, so_int n) {
-    c_Assert(dst != NULL, "mem: nil pointer");
-    c_Assert(src != NULL, "mem: nil pointer");
-    c_Assert(n >= 0, "mem: negative size");
+    so_assert(dst != NULL, "mem: nil pointer");
+    so_assert(src != NULL, "mem: nil pointer");
+    so_assert(n >= 0, "mem: negative size");
     return memcpy(dst, src, (uintptr_t)(n));
 }
 
@@ -378,9 +417,9 @@ static inline void* mem_Copy(void* dst, void* src, so_int n) {
 // Panics if either dst or src is nil.
 //
 static inline void* mem_Move(void* dst, void* src, so_int n) {
-    c_Assert(dst != NULL, "mem: nil pointer");
-    c_Assert(src != NULL, "mem: nil pointer");
-    c_Assert(n >= 0, "mem: negative size");
+    so_assert(dst != NULL, "mem: nil pointer");
+    so_assert(src != NULL, "mem: nil pointer");
+    so_assert(n >= 0, "mem: negative size");
     return memmove(dst, src, (uintptr_t)(n));
 }
 
@@ -388,8 +427,8 @@ static inline void* mem_Move(void* dst, void* src, so_int n) {
 // Panics if either a or b is nil.
 //
 #define mem_Swap(T, a_, b_) do { \
-    c_Assert(a_ != NULL, "mem: nil pointer"); \
-    c_Assert(b_ != NULL, "mem: nil pointer"); \
+    so_assert(a_ != NULL, "mem: nil pointer"); \
+    so_assert(b_ != NULL, "mem: nil pointer"); \
     T _tmp = *a_; \
     *a_ = *b_; \
     *b_ = _tmp; \

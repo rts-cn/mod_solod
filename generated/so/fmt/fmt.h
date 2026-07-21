@@ -31,7 +31,7 @@ typedef struct {
 // NewBuffer creates a new stack-allocated Buffer of the given size.
 #define fmt_NewBuffer(size) ({                             \
     so_int _bsize = (size);                                \
-    assert(_bsize >= 0 && "fmt: negative buffer size");    \
+    so_assert(_bsize >= 0, "fmt: negative buffer size");   \
     (fmt_Buffer){.Ptr = so_alloca(_bsize), .Len = _bsize}; \
 })
 
@@ -49,6 +49,9 @@ so_R_int_err fmt_Printf(const char* format, ...);
 // Sprintf formats according to a format specifier and returns the resulting string.
 // If the output size exceeds buf length, it silently truncates the output.
 so_String fmt_Sprintf(fmt_Buffer buf, const char* format, ...);
+
+// vsprintf is like Sprintf but takes a va_list instead of a variable number of arguments.
+so_String fmt_vsprintf(fmt_Buffer buf, const char* format, va_list args);
 
 // Fprintf formats according to a format specifier and writes to w.
 // It returns the number of bytes written and any write error encountered.
