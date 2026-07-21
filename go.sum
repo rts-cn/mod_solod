@@ -6,3 +6,7 @@ solod.dev v0.0.0-20260426194351-874b9923eaf5 h1:OD51QEwBefLnctR5sL73FzyaaTzr35rb
 solod.dev v0.0.0-20260426194351-874b9923eaf5/go.mod h1:F8sRRT/id2KwekSYlEjE63QLLQawzYaMgpKq75Yl3Hg=
 solod.dev v0.0.0-20260428201503-449616f64008 h1:d1JXr1GsB7T/p8lya2IdyicYlVqCsgas6rf91nqg/3w=
 solod.dev v0.0.0-20260428201503-449616f64008/go.mod h1:F8sRRT/id2KwekSYlEjE63QLLQawzYaMgpKq75Yl3Hg=
+solod.dev v0.0.0-20260502145323-e0284ffc4ae9 h1:shgwYaZ8J7kOS5e2fnojA0jjbGYdc1/ii0iQ0du1NfA=
+solod.dev v0.0.0-20260502145323-e0284ffc4ae9/go.mod h1:F8sRRT/id2KwekSYlEjE63QLLQawzYaMgpKq75Yl3Hg=
+solod.dev v0.2.0 h1:kqiw8xZiyl9g23QML6dN7y1iHIk6erxJjcdHRaNrMUs=
+solod.dev v0.2.0/go.mod h1:F8sRRT/id2KwekSYlEjE63QLLQawzYaMgpKq75Yl3Hg=
