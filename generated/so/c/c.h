@@ -3,11 +3,7 @@
 
 // -- Embeds --
 
-#include <assert.h>
-#include <string.h>
 #include "so/builtin/builtin.h"
-
-#define so_const_char const char
 
 #define c_Alignof(T) ((so_int)alignof(T))
 

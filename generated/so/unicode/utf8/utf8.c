@@ -11,42 +11,41 @@ typedef struct acceptRange {
     uint8_t hi;
 } acceptRange;
 
+// -- Forward declarations --
+static so_R_rune_int decodeRuneSlow(so_Slice p);
+static so_R_rune_int decodeRuneInStringSlow(so_String s);
+static so_int encodeRuneNonASCII(so_Slice p, so_rune r);
+static so_Slice appendRuneNonASCII(so_Slice p, so_rune r);
+static uintptr_t wordSlice(so_Slice s);
+static uintptr_t wordString(so_String s);
+
 // -- Variables and constants --
 
-// The conditions RuneError==unicode.ReplacementChar and
-// MaxRune==unicode.MaxRune are verified in the tests.
-// Defining them locally avoids this package depending on package unicode.
-// Numbers fundamental to the encoding.
-const so_rune utf8_RuneError = U'\uFFFD';
-const so_int utf8_RuneSelf = 0x80;
-const so_rune utf8_MaxRune = U'\U0010FFFF';
-const so_int utf8_UTFMax = 4;
-
 // Code points in the surrogate range are not valid for UTF-8.
-static const so_int surrogateMin = 0xD800;
-static const so_int surrogateMax = 0xDFFF;
-static const so_int tx = 0b10000000;
-static const so_int t2 = 0b11000000;
-static const so_int t3 = 0b11100000;
-static const so_int t4 = 0b11110000;
-static const so_int maskx = 0b00111111;
-static const so_int mask2 = 0b00011111;
-static const so_int mask3 = 0b00001111;
-static const so_int mask4 = 0b00000111;
-static const so_int rune1Max = ((so_int)1 << 7) - 1;
-static const so_int rune2Max = ((so_int)1 << 11) - 1;
-static const so_int rune3Max = ((so_int)1 << 16) - 1;
-static const so_int locb = 0b10000000;
-static const so_int hicb = 0b10111111;
-static const so_int xx = 0xF1;
-static const so_int as = 0xF0;
-static const so_int s1 = 0x02;
-static const so_int s2 = 0x13;
-static const so_int s3 = 0x03;
-static const so_int s4 = 0x23;
-static const so_int s5 = 0x34;
-static const so_int s6 = 0x04;
-static const so_int s7 = 0x44;
+static const int64_t surrogateMin = 0xD800;
+static const int64_t surrogateMax = 0xDFFF;
+static const int64_t tx = 0b10000000;
+static const int64_t t2 = 0b11000000;
+static const int64_t t3 = 0b11100000;
+static const int64_t t4 = 0b11110000;
+static const int64_t maskx = 0b00111111;
+static const int64_t mask2 = 0b00011111;
+static const int64_t mask3 = 0b00001111;
+static const int64_t mask4 = 0b00000111;
+static const int64_t rune1Max = ((int64_t)1 << 7) - 1;
+static const int64_t rune2Max = ((int64_t)1 << 11) - 1;
+static const int64_t rune3Max = ((int64_t)1 << 16) - 1;
+static const int64_t locb = 0b10000000;
+static const int64_t hicb = 0b10111111;
+static const int64_t xx = 0xF1;
+static const int64_t as = 0xF0;
+static const int64_t s1 = 0x02;
+static const int64_t s2 = 0x13;
+static const int64_t s3 = 0x03;
+static const int64_t s4 = 0x23;
+static const int64_t s5 = 0x34;
+static const int64_t s6 = 0x04;
+static const int64_t s7 = 0x44;
 static const so_rune runeErrorByte0 = (t3 | (utf8_RuneError >> 12));
 static const so_rune runeErrorByte1 = (tx | ((utf8_RuneError >> 6) & maskx));
 static const so_rune runeErrorByte2 = (tx | (utf8_RuneError & maskx));
@@ -56,16 +55,8 @@ static uint8_t first[256] = {as, as, as, as, as, as, as, as, as, as, as, as, as,
 
 // acceptRanges has size 16 to avoid bounds checks in the code that uses it.
 static acceptRange acceptRanges[16] = {[0] = (acceptRange){locb, hicb}, [1] = (acceptRange){0xA0, hicb}, [2] = (acceptRange){locb, 0x9F}, [3] = (acceptRange){0x90, hicb}, [4] = (acceptRange){locb, 0x8F}};
-static const so_int ptrSize = ((so_int)4 << (~(uintptr_t)(0) >> 63));
-static const so_int hiBits = ((so_int)0x8080808080808080 >> (64 - 8 * ptrSize));
-
-// -- Forward declarations --
-static so_R_rune_int decodeRuneSlow(so_Slice p);
-static so_R_rune_int decodeRuneInStringSlow(so_String s);
-static so_int encodeRuneNonASCII(so_Slice p, so_rune r);
-static so_Slice appendRuneNonASCII(so_Slice p, so_rune r);
-static uintptr_t wordSlice(so_Slice s);
-static uintptr_t wordString(so_String s);
+static const int64_t ptrSize = ((int64_t)4 << ((uint64_t)(~(uintptr_t)(0)) >> 63));
+static const int64_t hiBits = ((int64_t)0x8080808080808080 >> (64 - 8 * ptrSize));
 
 // -- Implementation --
 

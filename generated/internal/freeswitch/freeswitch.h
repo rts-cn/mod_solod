@@ -43,9 +43,9 @@ typedef switch_core_session_t freeswitch_Session;
 typedef switch_loadable_module_interface_t freeswitch_ModuleInterface;
 typedef switch_stream_handle_t freeswitch_Stream;
 
-typedef switch_status_t (*freeswitch_APIFunc)(so_const_char*, freeswitch_Session*, freeswitch_Stream*);
+typedef switch_status_t (*freeswitch_APIFunc)(const char*, freeswitch_Session*, freeswitch_Stream*);
 
-typedef void (*freeswitch_AppFunc)(freeswitch_Session*, so_const_char*);
+typedef void (*freeswitch_AppFunc)(freeswitch_Session*, const char*);
 typedef so_int freeswitch_LogLevel;
 
 // *(switch_xml_t) xml element
@@ -56,37 +56,37 @@ typedef struct freeswitch_XMLRoot {
 } freeswitch_XMLRoot;
 
 // -- Variables and constants --
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_ENDPOINT_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_TIMER_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_DIALPLAN_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_CODEC_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_APPLICATION_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_API_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_FILE_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_SPEECH_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_DIRECTORY_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_CHAT_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_SAY_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_ASR_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_MANAGEMENT_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_LIMIT_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_CHAT_APPLICATION_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_JSON_API_INTERFACE;
-extern const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_DATABASE_INTERFACE;
-extern const freeswitch_ApplicationFlag freeswitch_SAF_NONE;
-extern const so_int freeswitch_SAF_SUPPORT_NOMEDIA;
-extern const so_int freeswitch_SAF_ROUTING_EXEC;
-extern const so_int freeswitch_SAF_MEDIA_TAP;
-extern const so_int freeswitch_SAF_ZOMBIE_EXEC;
-extern const so_int freeswitch_SAF_NO_LOOPBACK;
-extern const so_int freeswitch_SAF_SUPPORT_TEXT_ONLY;
-extern const freeswitch_IOFlag freeswitch_SWITCH_IO_FLAG_NONE;
-extern const so_int freeswitch_SWITCH_IO_FLAG_NOBLOCK;
-extern const so_int freeswitch_SWITCH_IO_FLAG_SINGLE_READ;
-extern const so_int freeswitch_SWITCH_IO_FLAG_FORCE;
-extern const so_int freeswitch_SWITCH_IO_FLAG_QUEUED;
-extern const freeswitch_LogLevel freeswitch_LOG_ERROR;
-extern const freeswitch_LogLevel freeswitch_LOG_INFO;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_ENDPOINT_INTERFACE = 0;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_TIMER_INTERFACE = 1;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_DIALPLAN_INTERFACE = 2;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_CODEC_INTERFACE = 3;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_APPLICATION_INTERFACE = 4;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_API_INTERFACE = 5;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_FILE_INTERFACE = 6;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_SPEECH_INTERFACE = 7;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_DIRECTORY_INTERFACE = 8;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_CHAT_INTERFACE = 9;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_SAY_INTERFACE = 10;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_ASR_INTERFACE = 11;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_MANAGEMENT_INTERFACE = 12;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_LIMIT_INTERFACE = 13;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_CHAT_APPLICATION_INTERFACE = 14;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_JSON_API_INTERFACE = 15;
+static const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_DATABASE_INTERFACE = 16;
+static const freeswitch_ApplicationFlag freeswitch_SAF_NONE = 0;
+static const int64_t freeswitch_SAF_SUPPORT_NOMEDIA = ((int64_t)1 << 0);
+static const int64_t freeswitch_SAF_ROUTING_EXEC = ((int64_t)1 << 1);
+static const int64_t freeswitch_SAF_MEDIA_TAP = ((int64_t)1 << 2);
+static const int64_t freeswitch_SAF_ZOMBIE_EXEC = ((int64_t)1 << 3);
+static const int64_t freeswitch_SAF_NO_LOOPBACK = ((int64_t)1 << 4);
+static const int64_t freeswitch_SAF_SUPPORT_TEXT_ONLY = ((int64_t)1 << 5);
+static const freeswitch_IOFlag freeswitch_SWITCH_IO_FLAG_NONE = 0;
+static const int64_t freeswitch_SWITCH_IO_FLAG_NOBLOCK = ((int64_t)1 << 0);
+static const int64_t freeswitch_SWITCH_IO_FLAG_SINGLE_READ = ((int64_t)1 << 1);
+static const int64_t freeswitch_SWITCH_IO_FLAG_FORCE = ((int64_t)1 << 2);
+static const int64_t freeswitch_SWITCH_IO_FLAG_QUEUED = ((int64_t)1 << 3);
+static const freeswitch_LogLevel freeswitch_LOG_ERROR = 3;
+static const freeswitch_LogLevel freeswitch_LOG_INFO = 6;
 
 // -- Functions and methods --
 uint8_t* freeswitch_Frame_Data(void* self);

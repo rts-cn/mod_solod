@@ -1,10 +1,4 @@
 #include "bytealg.h"
-#include <string.h>
-
-// -- Variables and constants --
-
-// PrimeRK is the prime base used in Rabin-Karp algorithm.
-const so_int bytealg_PrimeRK = 16777619;
 
 // -- Forward declarations --
 static so_R_u32_u32 hashStr(so_Slice sep);

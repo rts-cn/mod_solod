@@ -25,22 +25,6 @@ typedef struct span {
     so_int end;
 } span;
 
-// -- Variables and constants --
-
-// maxInt is the maximum value of an int.
-static const so_int maxInt = (so_int)(INT64_MAX);
-
-// According to static analysis, spaces, dashes, zeros, equals, and tabs
-// are the most commonly repeated string literal,
-// often used for display on fixed-width terminal windows.
-// Pre-declare constants for these for O(1) repetition in the common-case.
-static const so_String repeatedSpaces = so_str("" "                                                                " "                                                                ");
-static const so_String repeatedDashes = so_str("" "----------------------------------------------------------------" "----------------------------------------------------------------");
-static const so_String repeatedZeroes = so_str("" "0000000000000000000000000000000000000000000000000000000000000000");
-static const so_String repeatedEquals = so_str("" "================================================================" "================================================================");
-static const so_String repeatedTabs = so_str("" "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t" "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
-static uint8_t asciiSpace[256] = {[U'\t'] = 1, [U'\n'] = 1, [U'\v'] = 1, [U'\f'] = 1, [U'\r'] = 1, [U' '] = 1};
-
 // -- Forward declarations --
 static asciiSet makeASCIISet(so_String chars);
 static bool asciiSet_contains(void* self, so_byte c);
@@ -56,6 +40,22 @@ static so_String trimLeftUnicode(so_String s, so_String cutset);
 static so_String trimRightByte(so_String s, so_byte c);
 static so_String trimRightASCII(so_String s, asciiSet* as);
 static so_String trimRightUnicode(so_String s, so_String cutset);
+
+// -- Variables and constants --
+
+// maxInt is the maximum value of an int.
+static const so_int maxInt = (so_int)((uint64_t)(~(so_uint)(0)) >> 1);
+
+// According to static analysis, spaces, dashes, zeros, equals, and tabs
+// are the most commonly repeated string literal,
+// often used for display on fixed-width terminal windows.
+// Pre-declare constants for these for O(1) repetition in the common-case.
+static const so_String repeatedSpaces = so_str("" "                                                                " "                                                                ");
+static const so_String repeatedDashes = so_str("" "----------------------------------------------------------------" "----------------------------------------------------------------");
+static const so_String repeatedZeroes = so_str("" "0000000000000000000000000000000000000000000000000000000000000000");
+static const so_String repeatedEquals = so_str("" "================================================================" "================================================================");
+static const so_String repeatedTabs = so_str("" "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t" "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
+static uint8_t asciiSpace[256] = {[U'\t'] = 1, [U'\n'] = 1, [U'\v'] = 1, [U'\f'] = 1, [U'\r'] = 1, [U' '] = 1};
 
 // -- builder.go --
 
@@ -125,7 +125,7 @@ so_R_int_err strings_Builder_WriteRune(void* self, so_rune r) {
     strings_Builder_grow(b, utf8_UTFMax);
     so_int n = so_len(b->buf);
     b->buf = utf8_AppendRune(b->buf, r);
-    return (so_R_int_err){.val = so_len(b->buf) - n, .err = NULL};
+    return (so_R_int_err){.val = so_len(b->buf) - n, .err = (so_Error){0}};
 }
 
 // -- index.go --
@@ -546,7 +546,7 @@ so_R_int_err strings_Reader_Read(void* self, so_Slice b) {
     r->prevRune = -1;
     so_int n = so_copy_string(b, so_string_slice(r->s, r->i, r->s.len));
     r->i += (int64_t)(n);
-    return (so_R_int_err){.val = n, .err = NULL};
+    return (so_R_int_err){.val = n, .err = (so_Error){0}};
 }
 
 // ReadAt implements the [io.ReaderAt] interface.
@@ -563,7 +563,7 @@ so_R_int_err strings_Reader_ReadAt(void* self, so_Slice b, int64_t off) {
     if (n < so_len(b)) {
         return (so_R_int_err){.val = n, .err = io_EOF};
     }
-    return (so_R_int_err){.val = n, .err = NULL};
+    return (so_R_int_err){.val = n, .err = (so_Error){0}};
 }
 
 // ReadByte implements the [io.ByteReader] interface.
@@ -575,7 +575,7 @@ so_R_byte_err strings_Reader_ReadByte(void* self) {
     }
     so_byte b = so_at(so_byte, r->s, r->i);
     r->i++;
-    return (so_R_byte_err){.val = b, .err = NULL};
+    return (so_R_byte_err){.val = b, .err = (so_Error){0}};
 }
 
 // UnreadByte implements the [io.ByteScanner] interface.
@@ -586,7 +586,7 @@ so_Error strings_Reader_UnreadByte(void* self) {
     }
     r->prevRune = -1;
     r->i--;
-    return NULL;
+    return (so_Error){0};
 }
 
 // ReadRune implements the [io.RuneReader] interface.
@@ -601,14 +601,14 @@ io_RuneSizeResult strings_Reader_ReadRune(void* self) {
         so_byte c = so_at(so_byte, r->s, r->i);
         if (c < utf8_RuneSelf) {
             r->i++;
-            return (io_RuneSizeResult){.Rune = (so_rune)(c), .Size = 1, .Err = NULL};
+            return (io_RuneSizeResult){.Rune = (so_rune)(c), .Size = 1, .Err = (so_Error){0}};
         }
     }
     so_R_rune_int _res1 = utf8_DecodeRuneInString(so_string_slice(r->s, r->i, r->s.len));
     so_rune ch = _res1.val;
     so_int size = _res1.val2;
     r->i += (int64_t)(size);
-    return (io_RuneSizeResult){.Rune = ch, .Size = size, .Err = NULL};
+    return (io_RuneSizeResult){.Rune = ch, .Size = size, .Err = (so_Error){0}};
 }
 
 // UnreadRune implements the [io.RuneScanner] interface.
@@ -622,7 +622,7 @@ so_Error strings_Reader_UnreadRune(void* self) {
     }
     r->i = (int64_t)(r->prevRune);
     r->prevRune = -1;
-    return NULL;
+    return (so_Error){0};
 }
 
 // Seek implements the [io.Seeker] interface.
@@ -643,16 +643,16 @@ so_R_i64_err strings_Reader_Seek(void* self, int64_t offset, so_int whence) {
         return (so_R_i64_err){.val = 0, .err = io_ErrOffset};
     }
     r->i = abs;
-    return (so_R_i64_err){.val = abs, .err = NULL};
+    return (so_R_i64_err){.val = abs, .err = (so_Error){0}};
 }
 
 // WriteTo implements the [io.WriterTo] interface.
 so_R_i64_err strings_Reader_WriteTo(void* self, io_Writer w) {
     strings_Reader* r = self;
-    so_Error err = NULL;
+    so_Error err = {0};
     r->prevRune = -1;
     if (r->i >= (int64_t)(so_len(r->s))) {
-        return (so_R_i64_err){.val = 0, .err = NULL};
+        return (so_R_i64_err){.val = 0, .err = (so_Error){0}};
     }
     so_String s = so_string_slice(r->s, r->i, r->s.len);
     so_R_int_err _res1 = io_WriteString(w, s);
@@ -663,7 +663,7 @@ so_R_i64_err strings_Reader_WriteTo(void* self, io_Writer w) {
     }
     r->i += (int64_t)(m);
     int64_t n = (int64_t)(m);
-    if (m != so_len(s) && err == NULL) {
+    if (m != so_len(s) && err.self == NULL) {
         err = io_ErrShortWrite;
     }
     return (so_R_i64_err){.val = n, .err = err};
@@ -702,10 +702,10 @@ so_String strings_Repeat(mem_Allocator a, so_String s, so_int count) {
     if (count < 0) {
         so_panic("strings: negative repeat count");
     }
-    so_R_uint_uint _res1 = bits_Mul((uint64_t)(so_len(s)), (uint64_t)(count));
-    uint64_t hi = _res1.val;
-    uint64_t lo = _res1.val2;
-    if (hi > 0 || lo > (uint64_t)(maxInt)) {
+    so_R_uint_uint _res1 = bits_Mul((so_uint)(so_len(s)), (so_uint)(count));
+    so_uint hi = _res1.val;
+    so_uint lo = _res1.val2;
+    if (hi > 0 || lo > (so_uint)(maxInt)) {
         so_panic("strings: repeat overflow");
     }
     // lo = len(s) * count
@@ -737,7 +737,7 @@ so_String strings_Repeat(mem_Allocator a, so_String s, so_int count) {
     // have completed the construction of the result.
     // This yields significant speedups (up to +100%) in cases where
     // the result length is large (roughly, over L2 cache size).
-    const so_int chunkLimit = 8 * 1024;
+    const int64_t chunkLimit = 8 * 1024;
     so_int chunkMax = n;
     if (n > chunkLimit) {
         chunkMax = chunkLimit / so_len(s) * so_len(s);
@@ -904,7 +904,7 @@ so_Slice strings_FieldsFunc(mem_Allocator a, so_String s, strings_RunePredicate 
         so_rune rune = so_utf8_decode(s, end, &_endw);
         if (f(rune)) {
             if (start >= 0) {
-                spans = so_append(span, spans, (span){start, end});
+                spans = so_append(span, spans, ((span){start, end}));
                 // Set start to a negative value.
                 // Note: using -1 here consistently and reproducibly
                 // slows down this code by a several percent on amd64.
@@ -918,7 +918,7 @@ so_Slice strings_FieldsFunc(mem_Allocator a, so_String s, strings_RunePredicate 
     }
     // Last field might end at EOF.
     if (start >= 0) {
-        spans = so_append(span, spans, (span){start, so_len(s)});
+        spans = so_append(span, spans, ((span){start, so_len(s)}));
     }
     // Create strings from recorded field indices.
     so_Slice res = mem_AllocSlice(so_String, (a), (so_len(spans)), (so_len(spans)));

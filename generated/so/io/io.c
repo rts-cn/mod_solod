@@ -7,19 +7,20 @@ typedef struct eofReader eofReader;
 typedef struct eofReader {
 } eofReader;
 
+// -- Forward declarations --
+static so_R_i64_err copyBuffer(io_Writer dst, io_Reader src, so_Slice buf);
+static so_R_int_err eofReader_Read(void* self, so_Slice b);
+static so_R_i64_err io_MultiReader_writeToWithBuffer(void* self, io_Writer w, so_Slice buf);
+
 // -- Variables and constants --
+static const int64_t maxint64 = (int64_t)(~(uint64_t)(0) >> 1);
 
 // Discard is a [Writer] on which all Write calls
 // succeed without doing anything.
 io_Writer io_Discard = (io_Writer){.self = &(io_DiscardWriter){}, .Write = io_DiscardWriter_Write};
 
-// Seek whence values.
-const so_int io_SeekStart = 0;
-const so_int io_SeekCurrent = 1;
-const so_int io_SeekEnd = 2;
-
 // 8KB
-static const so_int defaultBufSize = 8 * 1024;
+static const int64_t defaultBufSize = 8 * 1024;
 
 // EOF is the error returned by Read when no more input is available.
 // (Read must return EOF itself, not an error wrapping EOF,
@@ -64,23 +65,18 @@ so_Error io_ErrWhence = errors_New("io: invalid whence");
 // ErrClosedPipe is the error used for read or write operations on a closed pipe.
 so_Error io_ErrClosedPipe = errors_New("io: read/write on closed pipe");
 
-// -- Forward declarations --
-static so_R_i64_err copyBuffer(io_Writer dst, io_Reader src, so_Slice buf);
-static so_R_int_err eofReader_Read(void* self, so_Slice b);
-static so_R_i64_err io_MultiReader_writeToWithBuffer(void* self, io_Writer w, so_Slice buf);
-
 // -- faces.go --
 
 // -- impls.go --
 
 so_R_int_err io_DiscardWriter_Write(void* self, so_Slice p) {
     (void)self;
-    return (so_R_int_err){.val = so_len(p), .err = NULL};
+    return (so_R_int_err){.val = so_len(p), .err = (so_Error){0}};
 }
 
 so_R_int_err io_DiscardWriter_WriteString(void* self, so_String s) {
     (void)self;
-    return (so_R_int_err){.val = so_len(s), .err = NULL};
+    return (so_R_int_err){.val = so_len(s), .err = (so_Error){0}};
 }
 
 // LimitReader returns a LimitedReader that reads from r
@@ -116,19 +112,19 @@ so_R_int_err io_NopCloser_Read(void* self, so_Slice p) {
 
 so_Error io_NopCloser_Close(void* self) {
     (void)self;
-    return NULL;
+    return (so_Error){0};
 }
 
 // NewSectionReader returns a [SectionReader] that reads from r
 // starting at offset off and stops with EOF after n bytes.
 io_SectionReader io_NewSectionReader(io_ReaderAt r, int64_t off, int64_t n) {
     int64_t remaining = 0;
-    if (off <= INT64_MAX - n) {
+    if (off <= maxint64 - n) {
         remaining = n + off;
     } else {
         // Overflow, with no way to return error.
         // Assume we can read up to an offset of 1<<63 - 1.
-        remaining = INT64_MAX;
+        remaining = maxint64;
     }
     return (io_SectionReader){r, off, off, remaining, n};
 }
@@ -166,7 +162,7 @@ so_R_i64_err io_SectionReader_Seek(void* self, int64_t offset, so_int whence) {
         return (so_R_i64_err){.val = 0, .err = io_ErrOffset};
     }
     s->off = offset;
-    return (so_R_i64_err){.val = offset - s->base, .err = NULL};
+    return (so_R_i64_err){.val = offset - s->base, .err = (so_Error){0}};
 }
 
 so_R_int_err io_SectionReader_ReadAt(void* self, so_Slice p, int64_t off) {
@@ -182,7 +178,7 @@ so_R_int_err io_SectionReader_ReadAt(void* self, so_Slice p, int64_t off) {
             so_R_int_err _res1 = s->r.ReadAt(s->r.self, p, off);
             so_int n = _res1.val;
             so_Error err = _res1.err;
-            if (err == NULL) {
+            if (err.self == NULL) {
                 err = io_EOF;
             }
             return (so_R_int_err){.val = n, .err = err};
@@ -234,6 +230,16 @@ so_R_i64_err io_Copy(io_Writer dst, io_Reader src) {
     return copyBuffer(dst, src, buf);
 }
 
+// CopyBuffer is identical to Copy except that it stages through the
+// provided buffer rather than allocating a temporary one.
+// If buf is nil or has zero length, CopyBuffer panics.
+so_R_i64_err io_CopyBuffer(io_Writer dst, io_Reader src, so_Slice buf) {
+    if (so_len(buf) == 0) {
+        so_panic("io.CopyBuffer: empty buffer");
+    }
+    return copyBuffer(dst, src, buf);
+}
+
 // CopyN copies n bytes (or until an error) from src to dst.
 // It returns the number of bytes copied and the earliest
 // error encountered while copying.
@@ -246,9 +252,9 @@ so_R_i64_err io_CopyN(io_Writer dst, io_Reader src, int64_t n) {
     int64_t written = _res1.val;
     so_Error err = _res1.err;
     if (written == n) {
-        return (so_R_i64_err){.val = n, .err = NULL};
+        return (so_R_i64_err){.val = n, .err = (so_Error){0}};
     }
-    if (written < n && err == NULL) {
+    if (written < n && err.self == NULL) {
         // src stopped early; must have been EOF.
         err = io_EOF;
     }
@@ -265,48 +271,50 @@ so_R_i64_err io_CopyN(io_Writer dst, io_Reader src, int64_t n) {
 so_R_slice_err io_ReadAll(mem_Allocator a, io_Reader r) {
     // Build slices of exponentially growing size,
     // then copy into a perfectly-sized slice at the end.
-    so_Slice b = mem_AllocSlice(so_byte, (a), (0), (512));
+    so_Slice buf = mem_AllocSlice(so_byte, (a), (0), (512));
     // Starting with next equal to 256 (instead of say 512 or 1024)
     // allows less memory usage for small inputs that finish in the
     // early growth stages, but we grow the read sizes quickly such that
     // it does not materially impact medium or large inputs.
     so_int next = 256;
-    so_Slice chunks = so_make_slice(so_Slice, 0, 4);
+    so_Slice chunks = mem_AllocSlice(so_Slice, (a), (0), (4));
     // Invariant: finalSize = sum(len(c) for c in chunks)
     so_int finalSize = 0;
     for (;;) {
-        so_R_int_err _res1 = r.Read(r.self, so_slice(so_byte, b, so_len(b), so_cap(b)));
+        so_R_int_err _res1 = r.Read(r.self, so_slice(so_byte, buf, so_len(buf), so_cap(buf)));
         so_int n = _res1.val;
         so_Error err = _res1.err;
-        b = so_slice(so_byte, b, 0, so_len(b) + n);
-        if (err != NULL) {
-            if (err == io_EOF) {
-                err = NULL;
+        buf = so_slice(so_byte, buf, 0, so_len(buf) + n);
+        if (err.self != NULL) {
+            if (err.self == io_EOF.self) {
+                err = (so_Error){0};
             }
             if (so_len(chunks) == 0) {
-                return (so_R_slice_err){.val = b, .err = err};
+                mem_FreeSlice(so_Slice, (a), (chunks));
+                return (so_R_slice_err){.val = buf, .err = err};
             }
             // Build our final right-sized slice.
-            finalSize += so_len(b);
+            finalSize += so_len(buf);
             so_Slice final = mem_AllocSlice(so_byte, (a), (0), (finalSize));
             for (so_int _ = 0; _ < so_len(chunks); _++) {
                 so_Slice chunk = so_at(so_Slice, chunks, _);
                 final = so_extend(so_byte, final, (chunk));
             }
-            final = so_extend(so_byte, final, (b));
+            final = so_extend(so_byte, final, (buf));
             // Free the intermediate slices.
             for (so_int _ = 0; _ < so_len(chunks); _++) {
                 so_Slice chunk = so_at(so_Slice, chunks, _);
                 mem_FreeSlice(so_byte, (a), (chunk));
             }
-            mem_FreeSlice(so_byte, (a), (b));
+            mem_FreeSlice(so_Slice, (a), (chunks));
+            mem_FreeSlice(so_byte, (a), (buf));
             return (so_R_slice_err){.val = final, .err = err};
         }
-        if (so_cap(b) - so_len(b) < so_cap(b) / 16) {
+        if (so_cap(buf) - so_len(buf) < so_cap(buf) / 16) {
             // Move to the next intermediate slice.
-            chunks = so_append(so_Slice, chunks, b);
-            finalSize += so_len(b);
-            b = mem_AllocSlice(so_byte, (a), (0), (next));
+            chunks = slices_Append(so_Slice, (a), (chunks), (buf));
+            finalSize += so_len(buf);
+            buf = mem_AllocSlice(so_byte, (a), (0), (next));
             next += next / 2;
         }
     }
@@ -321,8 +329,8 @@ so_R_slice_err io_ReadAll(mem_Allocator a, io_Reader r) {
 // If r returns an error having read at least len(buf) bytes, the error is dropped.
 so_R_int_err io_ReadFull(io_Reader r, so_Slice buf) {
     so_int n = 0;
-    so_Error err = NULL;
-    for (; n < so_len(buf) && err == NULL;) {
+    so_Error err = {0};
+    for (; n < so_len(buf) && err.self == NULL;) {
         so_int nn = 0;
         so_R_int_err _res1 = r.Read(r.self, so_slice(so_byte, buf, n, buf.len));
         nn = _res1.val;
@@ -330,8 +338,8 @@ so_R_int_err io_ReadFull(io_Reader r, so_Slice buf) {
         n += nn;
     }
     if (n >= so_len(buf)) {
-        err = NULL;
-    } else if (n > 0 && err == io_EOF) {
+        err = (so_Error){0};
+    } else if (n > 0 && err.self == io_EOF.self) {
         err = io_ErrUnexpectedEOF;
     }
     return (so_R_int_err){.val = n, .err = err};
@@ -347,7 +355,7 @@ so_R_int_err io_WriteString(io_Writer w, so_String s) {
 // with a buffer provided by the caller.
 static so_R_i64_err copyBuffer(io_Writer dst, io_Reader src, so_Slice buf) {
     int64_t written = 0;
-    so_Error err = NULL;
+    so_Error err = {0};
     for (;;) {
         so_R_int_err _res1 = src.Read(src.self, buf);
         so_int nr = _res1.val;
@@ -358,12 +366,12 @@ static so_R_i64_err copyBuffer(io_Writer dst, io_Reader src, so_Slice buf) {
             so_Error ew = _res2.err;
             if (nw < 0 || nr < nw) {
                 nw = 0;
-                if (ew == NULL) {
+                if (ew.self == NULL) {
                     ew = io_ErrInvalidWrite;
                 }
             }
             written += (int64_t)(nw);
-            if (ew != NULL) {
+            if (ew.self != NULL) {
                 err = ew;
                 break;
             }
@@ -372,8 +380,8 @@ static so_R_i64_err copyBuffer(io_Writer dst, io_Reader src, so_Slice buf) {
                 break;
             }
         }
-        if (er != NULL) {
-            if (er != io_EOF) {
+        if (er.self != NULL) {
+            if (er.self != io_EOF.self) {
                 err = er;
             }
             break;
@@ -393,7 +401,7 @@ static so_R_int_err eofReader_Read(void* self, so_Slice b) {
 so_R_int_err io_MultiReader_Read(void* self, so_Slice p) {
     io_MultiReader* mr = self;
     so_int n = 0;
-    so_Error err = NULL;
+    so_Error err = {0};
     for (; so_len(mr->readers) > 0;) {
         // Optimization to flatten nested multiReaders (Issue 13558).
         if (so_len(mr->readers) == 1) {
@@ -410,17 +418,17 @@ so_R_int_err io_MultiReader_Read(void* self, so_Slice p) {
         so_R_int_err _res1 = so_at(io_Reader, mr->readers, 0).Read(so_at(io_Reader, mr->readers, 0).self, p);
         n = _res1.val;
         err = _res1.err;
-        if (err == io_EOF) {
+        if (err.self == io_EOF.self) {
             // Use eofReader instead of nil to avoid nil panic
             // after performing flatten (Issue 18232).
             // permit earlier GC
             so_at(io_Reader, mr->readers, 0) = (io_Reader){.self = &(eofReader){}, .Read = eofReader_Read};
             mr->readers = so_slice(io_Reader, mr->readers, 1, mr->readers.len);
         }
-        if (n > 0 || err != io_EOF) {
-            if (err == io_EOF && so_len(mr->readers) > 0) {
+        if (n > 0 || err.self != io_EOF.self) {
+            if (err.self == io_EOF.self && so_len(mr->readers) > 0) {
                 // Don't return EOF yet. More readers remain.
-                err = NULL;
+                err = (so_Error){0};
             }
             return (so_R_int_err){.val = n, .err = err};
         }
@@ -436,7 +444,7 @@ so_R_i64_err io_MultiReader_WriteTo(void* self, io_Writer w) {
 static so_R_i64_err io_MultiReader_writeToWithBuffer(void* self, io_Writer w, so_Slice buf) {
     io_MultiReader* mr = self;
     int64_t sum = 0;
-    so_Error err = NULL;
+    so_Error err = {0};
     for (so_int i = 0; i < so_len(mr->readers); i++) {
         io_Reader r = so_at(io_Reader, mr->readers, i);
         int64_t n = 0;
@@ -455,7 +463,7 @@ static so_R_i64_err io_MultiReader_writeToWithBuffer(void* self, io_Writer w, so
             }
         }
         sum += n;
-        if (err != NULL) {
+        if (err.self != NULL) {
             // permit resume / retry after error
             mr->readers = so_slice(io_Reader, mr->readers, i, mr->readers.len);
             return (so_R_i64_err){.val = sum, .err = err};
@@ -464,7 +472,7 @@ static so_R_i64_err io_MultiReader_writeToWithBuffer(void* self, io_Writer w, so
         so_at(io_Reader, mr->readers, i) = (io_Reader){0};
     }
     mr->readers = (so_Slice){0};
-    return (so_R_i64_err){.val = sum, .err = NULL};
+    return (so_R_i64_err){.val = sum, .err = (so_Error){0}};
 }
 
 // NewMultiReader returns a Reader that's the logical concatenation of
@@ -480,13 +488,13 @@ io_MultiReader io_NewMultiReader(so_Slice readers) {
 so_R_int_err io_MultiWriter_Write(void* self, so_Slice p) {
     io_MultiWriter* t = self;
     so_int n = 0;
-    so_Error err = NULL;
+    so_Error err = {0};
     for (so_int _ = 0; _ < so_len(t->writers); _++) {
         io_Writer w = so_at(io_Writer, t->writers, _);
         so_R_int_err _res1 = w.Write(w.self, p);
         n = _res1.val;
         err = _res1.err;
-        if (err != NULL) {
+        if (err.self != NULL) {
             return (so_R_int_err){.val = n, .err = err};
         }
         if (n != so_len(p)) {
@@ -494,13 +502,13 @@ so_R_int_err io_MultiWriter_Write(void* self, so_Slice p) {
             return (so_R_int_err){.val = n, .err = err};
         }
     }
-    return (so_R_int_err){.val = so_len(p), .err = NULL};
+    return (so_R_int_err){.val = so_len(p), .err = (so_Error){0}};
 }
 
 so_R_int_err io_MultiWriter_WriteString(void* self, so_String s) {
     io_MultiWriter* t = self;
     so_int n = 0;
-    so_Error err = NULL;
+    so_Error err = {0};
     // lazily initialized if/when needed
     so_Slice p = {0};
     for (so_int _ = 0; _ < so_len(t->writers); _++) {
@@ -511,14 +519,14 @@ so_R_int_err io_MultiWriter_WriteString(void* self, so_String s) {
         so_R_int_err _res1 = w.Write(w.self, p);
         n = _res1.val;
         err = _res1.err;
-        if (err != NULL) {
+        if (err.self != NULL) {
             return (so_R_int_err){.val = n, .err = err};
         }
         if (n != so_len(s)) {
             return (so_R_int_err){.val = n, .err = io_ErrShortWrite};
         }
     }
-    return (so_R_int_err){.val = so_len(s), .err = NULL};
+    return (so_R_int_err){.val = so_len(s), .err = (so_Error){0}};
 }
 
 // NewMultiWriter creates a writer that duplicates its writes to all the

@@ -5,6 +5,19 @@
 
 #include "so/builtin/builtin.h"
 
+#ifndef so_build_hosted
+// Pure C memchr implementation for freestanding environments.
+static inline void* memchr(const void* s, int c, size_t n) {
+    const unsigned char* p = s;
+    unsigned char target = (unsigned char)c;
+    while (n--) {
+        if (*p == target) return (void*)p;
+        p++;
+    }
+    return NULL;
+}
+#endif
+
 static inline so_int bytealg_Compare(so_Slice a, so_Slice b) {
     so_int n = a.len;
     if (b.len < n) n = b.len;
@@ -24,7 +37,7 @@ static inline so_int bytealg_IndexByte(so_Slice b, so_byte c) {
 // -- Variables and constants --
 
 // PrimeRK is the prime base used in Rabin-Karp algorithm.
-extern const so_int bytealg_PrimeRK;
+static const int64_t bytealg_PrimeRK = 16777619;
 
 // -- Functions and methods --
 

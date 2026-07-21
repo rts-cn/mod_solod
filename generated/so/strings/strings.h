@@ -3,7 +3,6 @@
 #include "so/bytealg/bytealg.h"
 #include "so/io/io.h"
 #include "so/math/bits/bits.h"
-#include "so/math/math.h"
 #include "so/mem/mem.h"
 #include "so/stringslite/stringslite.h"
 #include "so/unicode/unicode.h"
@@ -96,7 +95,7 @@ static inline so_R_int_err strings_Builder_Write(void* self, so_Slice p) {
     strings_Builder* b = self;
     strings_Builder_grow(b, so_len(p));
     b->buf = so_extend(so_byte, b->buf, (p));
-    return (so_R_int_err){.val = so_len(p), .err = NULL};
+    return (so_R_int_err){.val = so_len(p), .err = (so_Error){0}};
 }
 
 // WriteByte appends the byte c to b's buffer.
@@ -106,7 +105,7 @@ static inline so_Error strings_Builder_WriteByte(void* self, so_byte c) {
     strings_Builder* b = self;
     strings_Builder_grow(b, 1);
     b->buf = so_append(so_byte, b->buf, c);
-    return NULL;
+    return (so_Error){0};
 }
 
 // WriteRune appends the UTF-8 encoding of Unicode code point r to b's buffer.
@@ -120,7 +119,7 @@ static inline so_R_int_err strings_Builder_WriteString(void* self, so_String s) 
     strings_Builder* b = self;
     strings_Builder_grow(b, so_len(s));
     b->buf = so_extend(so_byte, b->buf, so_string_bytes(s));
-    return (so_R_int_err){.val = so_len(s), .err = NULL};
+    return (so_R_int_err){.val = so_len(s), .err = (so_Error){0}};
 }
 
 // Contains reports whether substr is within s.

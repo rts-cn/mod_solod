@@ -18,39 +18,6 @@ void freeswitch_Stream_Write2(switch_stream_handle_t *stream, const char *fmt, .
     va_end(args);
 }
 
-// -- Variables and constants --
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_ENDPOINT_INTERFACE = 0;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_TIMER_INTERFACE = 1;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_DIALPLAN_INTERFACE = 2;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_CODEC_INTERFACE = 3;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_APPLICATION_INTERFACE = 4;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_API_INTERFACE = 5;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_FILE_INTERFACE = 6;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_SPEECH_INTERFACE = 7;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_DIRECTORY_INTERFACE = 8;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_CHAT_INTERFACE = 9;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_SAY_INTERFACE = 10;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_ASR_INTERFACE = 11;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_MANAGEMENT_INTERFACE = 12;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_LIMIT_INTERFACE = 13;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_CHAT_APPLICATION_INTERFACE = 14;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_JSON_API_INTERFACE = 15;
-const freeswitch_SwitchModuleInterfaceName freeswitch_SWITCH_DATABASE_INTERFACE = 16;
-const freeswitch_ApplicationFlag freeswitch_SAF_NONE = 0;
-const so_int freeswitch_SAF_SUPPORT_NOMEDIA = ((so_int)1 << 0);
-const so_int freeswitch_SAF_ROUTING_EXEC = ((so_int)1 << 1);
-const so_int freeswitch_SAF_MEDIA_TAP = ((so_int)1 << 2);
-const so_int freeswitch_SAF_ZOMBIE_EXEC = ((so_int)1 << 3);
-const so_int freeswitch_SAF_NO_LOOPBACK = ((so_int)1 << 4);
-const so_int freeswitch_SAF_SUPPORT_TEXT_ONLY = ((so_int)1 << 5);
-const freeswitch_IOFlag freeswitch_SWITCH_IO_FLAG_NONE = 0;
-const so_int freeswitch_SWITCH_IO_FLAG_NOBLOCK = ((so_int)1 << 0);
-const so_int freeswitch_SWITCH_IO_FLAG_SINGLE_READ = ((so_int)1 << 1);
-const so_int freeswitch_SWITCH_IO_FLAG_FORCE = ((so_int)1 << 2);
-const so_int freeswitch_SWITCH_IO_FLAG_QUEUED = ((so_int)1 << 3);
-const freeswitch_LogLevel freeswitch_LOG_ERROR = 3;
-const freeswitch_LogLevel freeswitch_LOG_INFO = 6;
-
 // -- core.go --
 
 // -- event.go --
@@ -73,7 +40,7 @@ void freeswitch_Init(void) {
     // todo, this function is incomplete
     freeswitch_Bool flags = SWITCH_TRUE;
     uint32_t console = SCF_USE_SQL;
-    so_const_char* err = NULL;
+    const char* err = NULL;
     so_int loop = 0;
     so_println("%s", "Hello, MySWITCH is running ...\n");
     switch_core_set_globals();
@@ -90,9 +57,9 @@ void freeswitch_Log(freeswitch_LogLevel level, so_String format, so_Slice args) 
     strings_Builder sb = {0};
     so_R_int_err _res1 = fmt_Fprintf((io_Writer){.self = &sb, .Write = strings_Builder_Write}, so_cstr(format), so_decay(args));
     so_Error err = _res1.err;
-    if (err != NULL) {
+    if (err.self != NULL) {
         strings_Builder_Free(&sb);
-        so_panic(err->msg);
+        so_panic(so_error_cstr(err));
     }
     so_String s = strings_Builder_String(&sb);
     if (so_string_ne(s, so_str(""))) {
@@ -153,6 +120,6 @@ freeswitch_XML* freeswitch_XML_Child(void* self, so_String name) {
 
 so_String freeswitch_XML_Attr(void* self, so_String attr) {
     freeswitch_XML* xml = self;
-    so_const_char* val = switch_xml_attr_soft(xml, so_cstr(attr));
-    return c_String(so_const_char, (val));
+    const char* val = switch_xml_attr_soft(xml, so_cstr(attr));
+    return c_String(const char, (val));
 }

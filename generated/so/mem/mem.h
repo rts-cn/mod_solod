@@ -2,12 +2,9 @@
 #include "so/builtin/builtin.h"
 #include "so/c/c.h"
 #include "so/errors/errors.h"
-#include "so/math/math.h"
 
 // -- Embeds --
 
-#include <assert.h>
-#include <string.h>
 #include "so/builtin/builtin.h"
 
 // SwapByte swaps n bytes between a and b.
@@ -27,6 +24,79 @@ static inline void mem_SwapByte(void* a, void* b, so_int n) {
     memcpy(a, b, size);
     memcpy(b, tmp, size);
 }
+
+#ifndef so_build_hosted
+
+// Bump allocator over a static buffer for freestanding environments.
+// Memory is never reclaimed: free is a no-op, realloc copies into a new bump.
+// Suitable for short-lived programs that don't need much memory.
+// The heap is off by default, enable with -DSO_HEAP_SIZE=N.
+
+#ifndef SO_HEAP_SIZE
+#define SO_HEAP_SIZE (0)  // in bytes
+#endif
+
+#if SO_HEAP_SIZE > 0
+
+static char so_heap[SO_HEAP_SIZE];
+static size_t so_heap_offset = 0;
+
+static inline void* malloc(size_t size) {
+    if (size == 0) return NULL;
+    // Align to 16 bytes.
+    so_heap_offset = (so_heap_offset + 15) & ~(size_t)15;
+    if (so_heap_offset + size > SO_HEAP_SIZE) return NULL;
+    void* ptr = &so_heap[so_heap_offset];
+    so_heap_offset += size;
+    return ptr;
+}
+
+static inline void* calloc(size_t num, size_t size) {
+    if (num != 0 && size > SIZE_MAX / num) return NULL;
+    size_t total = num * size;
+    void* ptr = malloc(total);
+    if (ptr) memset(ptr, 0, total);
+    return ptr;
+}
+
+static inline void* realloc(void* ptr, size_t new_size) {
+    if (new_size == 0) return NULL;
+    void* new_ptr = malloc(new_size);
+    if (ptr && new_ptr) {
+        // We don't track allocation sizes, so we copy new_size bytes.
+        // When growing, this over-reads from the old allocation into
+        // adjacent bump memory - harmless but yields garbage in the tail.
+        memcpy(new_ptr, ptr, new_size);
+    }
+    return new_ptr;
+}
+
+#else
+
+static inline void* malloc(size_t size) {
+    (void)size;
+    return NULL;
+}
+
+static inline void* calloc(size_t num, size_t size) {
+    (void)num;
+    (void)size;
+    return NULL;
+}
+
+static inline void* realloc(void* ptr, size_t new_size) {
+    (void)ptr;
+    (void)new_size;
+    return NULL;
+}
+
+#endif  // SO_HEAP_SIZE > 0
+
+static inline void free(void* ptr) {
+    (void)ptr;
+}
+
+#endif  // so_build_hosted
 
 // -- Types --
 
@@ -54,7 +124,8 @@ typedef struct mem_Stats {
 } mem_Stats;
 
 // Arena is a memory allocator that bump-allocates linearly
-// within a fixed buffer. Individual Free calls are no-ops.
+// within a fixed buffer. Free reclaims the last allocation
+// if the pointer matches; otherwise it is a no-op.
 // Use Reset to reclaim all memory at once.
 typedef struct mem_Arena {
     so_Slice buf;
@@ -116,8 +187,8 @@ void mem_Arena_Reset(void* self);
     so_R_ptr_err _res1 = mem_TryAlloc(T, (a_)); \
     T* _ptr = _res1.val; \
     so_Error _err = _res1.err; \
-    if (_err != NULL) { \
-        so_panic(_err->msg); \
+    if (_err.self != NULL) { \
+        so_panic(so_error_cstr(_err)); \
     } \
     _ptr; \
 })
@@ -157,8 +228,8 @@ void mem_Arena_Reset(void* self);
     so_R_slice_err _res1 = mem_TryAllocSlice(T, (a_), (len_), (cap_)); \
     so_Slice _s = _res1.val; \
     so_Error _err = _res1.err; \
-    if (_err != NULL) { \
-        so_panic(_err->msg); \
+    if (_err.self != NULL) { \
+        so_panic(so_error_cstr(_err)); \
     } \
     _s; \
 })
@@ -176,16 +247,16 @@ void mem_Arena_Reset(void* self);
     c_Assert(_len >= 0, "mem: negative length"); \
     c_Assert(_cap >= 0, "mem: negative capacity"); \
     c_Assert(_len <= _cap, "mem: length exceeds capacity"); \
-    c_Assert(_cap < math_MaxInt / _esize, "mem: capacity overflow"); \
+    c_Assert(_cap < so_max_int / _esize, "mem: capacity overflow"); \
     void* _ptr = NULL; \
-    so_Error _err = NULL; \
+    so_Error _err = {0}; \
     if (_cap > 0) { \
         so_R_ptr_err _res1 = _a.Alloc(_a.self, _esize * _cap, _align); \
         _ptr = _res1.val; \
         _err = _res1.err; \
     } \
     so_Slice _ts = {0}; \
-    if (_err == NULL) { \
+    if (_err.self == NULL) { \
         _ts = c_Slice(T, (c_PtrAs(T, (_ptr))), (_len), (_cap)); \
     } \
     (so_R_slice_err){.val = _ts, .err = _err}; \
@@ -201,8 +272,8 @@ void mem_Arena_Reset(void* self);
     so_R_slice_err _res1 = mem_TryReallocSlice(T, (a_), (slice_), (newLen_), (newCap_)); \
     so_Slice _s = _res1.val; \
     so_Error _err = _res1.err; \
-    if (_err != NULL) { \
-        so_panic(_err->msg); \
+    if (_err.self != NULL) { \
+        so_panic(so_error_cstr(_err)); \
     } \
     _s; \
 })
@@ -221,9 +292,9 @@ void mem_Arena_Reset(void* self);
     c_Assert(_newLen >= 0, "mem: negative length"); \
     c_Assert(_newCap >= 0, "mem: negative capacity"); \
     c_Assert(_newLen <= _newCap, "mem: length exceeds capacity"); \
-    c_Assert(_newCap < math_MaxInt / _esize, "mem: capacity overflow"); \
+    c_Assert(_newCap < so_max_int / _esize, "mem: capacity overflow"); \
     void* _newPtr = NULL; \
-    so_Error _err = NULL; \
+    so_Error _err = {0}; \
     if (_newCap == 0) { \
         if (_oldCap > 0) { \
             _a.Free(_a.self, unsafe_SliceData(slice_), _esize * _oldCap, _align); \
@@ -239,7 +310,7 @@ void mem_Arena_Reset(void* self);
         _err = _res2.err; \
     } \
     so_Slice _s = {0}; \
-    if (_err == NULL) { \
+    if (_err.self == NULL) { \
         _s = c_Slice(T, (c_PtrAs(T, (_newPtr))), (_newLen), (_newCap)); \
     } \
     (so_R_slice_err){.val = _s, .err = _err}; \
@@ -282,7 +353,7 @@ static inline so_int mem_Compare(void* a, void* b, so_int size) {
     c_Assert(a != NULL, "mem: nil pointer");
     c_Assert(b != NULL, "mem: nil pointer");
     c_Assert(size >= 0, "mem: negative size");
-    so_int res = memcmp(a, b, (uintptr_t)(size));
+    int res = memcmp(a, b, (uintptr_t)(size));
     if (res < 0) {
         return -1;
     } else if (res > 0) {

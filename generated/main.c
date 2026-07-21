@@ -29,10 +29,9 @@ SWITCH_MODULE_SHUTDOWN_FUNCTION(mod_solod_shutdown)
 	return SWITCH_STATUS_SUCCESS;
 }
 
-// -- Variables and constants --
-
 // -- Implementation --
 
 int main(void) {
     freeswitch_Init();
+    return 0;
 }

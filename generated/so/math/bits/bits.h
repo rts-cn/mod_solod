@@ -4,13 +4,14 @@
 // -- Variables and constants --
 
 // UintSize is the size of a uint in bits.
-extern const so_int bits_UintSize;
+// 32 or 64
+static const int64_t bits_UintSize = ((int64_t)32 << ((uint64_t)(~(so_uint)(0)) >> 63));
 
 // -- Functions and methods --
 
 // --- LeadingZeros ---
 // LeadingZeros returns the number of leading zero bits in x; the result is [UintSize] for x == 0.
-so_int bits_LeadingZeros(uint64_t x);
+so_int bits_LeadingZeros(so_uint x);
 
 // LeadingZeros8 returns the number of leading zero bits in x; the result is 8 for x == 0.
 so_int bits_LeadingZeros8(uint8_t x);
@@ -25,7 +26,7 @@ so_int bits_LeadingZeros32(uint32_t x);
 so_int bits_LeadingZeros64(uint64_t x);
 
 // TrailingZeros returns the number of trailing zero bits in x; the result is [UintSize] for x == 0.
-so_int bits_TrailingZeros(uint64_t x);
+so_int bits_TrailingZeros(so_uint x);
 
 // TrailingZeros8 returns the number of trailing zero bits in x; the result is 8 for x == 0.
 so_int bits_TrailingZeros8(uint8_t x);
@@ -40,7 +41,7 @@ so_int bits_TrailingZeros32(uint32_t x);
 so_int bits_TrailingZeros64(uint64_t x);
 
 // OnesCount returns the number of one bits ("population count") in x.
-so_int bits_OnesCount(uint64_t x);
+so_int bits_OnesCount(so_uint x);
 
 // OnesCount8 returns the number of one bits ("population count") in x.
 so_int bits_OnesCount8(uint8_t x);
@@ -59,7 +60,7 @@ so_int bits_OnesCount64(uint64_t x);
 // To rotate x right by k bits, call RotateLeft(x, -k).
 //
 // This function's execution time does not depend on the inputs.
-uint64_t bits_RotateLeft(uint64_t x, so_int k);
+so_uint bits_RotateLeft(so_uint x, so_int k);
 
 // RotateLeft8 returns the value of x rotated left by (k mod 8) bits.
 // To rotate x right by k bits, call RotateLeft8(x, -k).
@@ -87,7 +88,7 @@ uint64_t bits_RotateLeft64(uint64_t x, so_int k);
 
 // --- Reverse ---
 // Reverse returns the value of x with its bits in reversed order.
-uint64_t bits_Reverse(uint64_t x);
+so_uint bits_Reverse(so_uint x);
 
 // Reverse8 returns the value of x with its bits in reversed order.
 uint8_t bits_Reverse8(uint8_t x);
@@ -105,7 +106,7 @@ uint64_t bits_Reverse64(uint64_t x);
 // ReverseBytes returns the value of x with its bytes in reversed order.
 //
 // This function's execution time does not depend on the inputs.
-uint64_t bits_ReverseBytes(uint64_t x);
+so_uint bits_ReverseBytes(so_uint x);
 
 // ReverseBytes16 returns the value of x with its bytes in reversed order.
 //
@@ -124,7 +125,7 @@ uint64_t bits_ReverseBytes64(uint64_t x);
 
 // --- Len ---
 // Len returns the minimum number of bits required to represent x; the result is 0 for x == 0.
-so_int bits_Len(uint64_t x);
+so_int bits_Len(so_uint x);
 
 // Len8 returns the minimum number of bits required to represent x; the result is 0 for x == 0.
 so_int bits_Len8(uint8_t x);
@@ -144,7 +145,7 @@ so_int bits_Len64(uint64_t x);
 // The carryOut output is guaranteed to be 0 or 1.
 //
 // This function's execution time does not depend on the inputs.
-so_R_uint_uint bits_Add(uint64_t x, uint64_t y, uint64_t carry);
+so_R_uint_uint bits_Add(so_uint x, so_uint y, so_uint carry);
 
 // Add32 returns the sum with carry of x, y and carry: sum = x + y + carry.
 // The carry input must be 0 or 1; otherwise the behavior is undefined.
@@ -166,7 +167,7 @@ so_R_u64_u64 bits_Add64(uint64_t x, uint64_t y, uint64_t carry);
 // The borrowOut output is guaranteed to be 0 or 1.
 //
 // This function's execution time does not depend on the inputs.
-so_R_uint_uint bits_Sub(uint64_t x, uint64_t y, uint64_t borrow);
+so_R_uint_uint bits_Sub(so_uint x, so_uint y, so_uint borrow);
 
 // Sub32 returns the difference of x, y and borrow, diff = x - y - borrow.
 // The borrow input must be 0 or 1; otherwise the behavior is undefined.
@@ -188,7 +189,7 @@ so_R_u64_u64 bits_Sub64(uint64_t x, uint64_t y, uint64_t borrow);
 // half returned in lo.
 //
 // This function's execution time does not depend on the inputs.
-so_R_uint_uint bits_Mul(uint64_t x, uint64_t y);
+so_R_uint_uint bits_Mul(so_uint x, so_uint y);
 
 // Mul32 returns the 64-bit product of x and y: (hi, lo) = x * y
 // with the product bits' upper half returned in hi and the lower
@@ -209,7 +210,7 @@ so_R_u64_u64 bits_Mul64(uint64_t x, uint64_t y);
 // quo = (hi, lo)/y, rem = (hi, lo)%y with the dividend bits' upper
 // half in parameter hi and the lower half in parameter lo.
 // Div panics for y == 0 (division by zero) or y <= hi (quotient overflow).
-so_R_uint_uint bits_Div(uint64_t hi, uint64_t lo, uint64_t y);
+so_R_uint_uint bits_Div(so_uint hi, so_uint lo, so_uint y);
 
 // Div32 returns the quotient and remainder of (hi, lo) divided by y:
 // quo = (hi, lo)/y, rem = (hi, lo)%y with the dividend bits' upper
@@ -226,7 +227,7 @@ so_R_u64_u64 bits_Div64(uint64_t hi, uint64_t lo, uint64_t y);
 // Rem returns the remainder of (hi, lo) divided by y. Rem panics for
 // y == 0 (division by zero) but, unlike Div, it doesn't panic on a
 // quotient overflow.
-uint64_t bits_Rem(uint64_t hi, uint64_t lo, uint64_t y);
+so_uint bits_Rem(so_uint hi, so_uint lo, so_uint y);
 
 // Rem32 returns the remainder of (hi, lo) divided by y. Rem32 panics
 // for y == 0 (division by zero) but, unlike [Div32], it doesn't panic

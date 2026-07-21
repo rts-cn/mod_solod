@@ -60,16 +60,16 @@ typedef struct unicode_CaseRange {
 // -- Variables and constants --
 
 // Version is the Unicode edition from which the tables are derived.
-extern const so_String unicode_Version;
-extern const so_rune unicode_MaxRune;
-extern const so_rune unicode_ReplacementChar;
-extern const so_rune unicode_MaxASCII;
-extern const so_rune unicode_MaxLatin1;
+static const so_String unicode_Version = so_str("15.0.0");
+static const so_rune unicode_MaxRune = U'\U0010FFFF';
+static const so_rune unicode_ReplacementChar = U'\uFFFD';
+static const so_rune unicode_MaxASCII = U'\x7f';
+static const so_rune unicode_MaxLatin1 = U'\u00FF';
 
 // If the Delta field of a [CaseRange] is UpperLower, it means
 // this CaseRange represents a sequence of the form (say)
 // [Upper] [Lower] [Upper] [Lower].
-extern const so_rune unicode_UpperLower;
+static const so_rune unicode_UpperLower = unicode_MaxRune + 1;
 
 // Latin is the set of Unicode characters in script Latin.
 extern unicode_RangeTable* unicode_Latin;
@@ -97,10 +97,10 @@ extern unicode_RangeTable* unicode_White_Space;
 extern so_Slice unicode_CaseRanges;
 
 // Indices into the Delta arrays inside CaseRanges for case mapping.
-extern const so_int unicode_UpperCase;
-extern const so_int unicode_LowerCase;
-extern const so_int unicode_TitleCase;
-extern const so_int unicode_MaxCase;
+static const int64_t unicode_UpperCase = 0;
+static const int64_t unicode_LowerCase = 1;
+static const int64_t unicode_TitleCase = 2;
+static const int64_t unicode_MaxCase = 3;
 
 // -- Functions and methods --
 

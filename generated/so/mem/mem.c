@@ -40,7 +40,7 @@ so_R_ptr_err mem_Arena_Alloc(void* self, so_int size, so_int align) {
     so_clear(so_byte, so_slice(so_byte, a->buf, aligned, aligned + size));
     a->lastStart = aligned;
     a->offset = aligned + size;
-    return (so_R_ptr_err){.val = &so_at(so_byte, a->buf, aligned), .err = NULL};
+    return (so_R_ptr_err){.val = &so_at(so_byte, a->buf, aligned), .err = (so_Error){0}};
 }
 
 so_R_ptr_err mem_Arena_Realloc(void* self, void* ptr, so_int oldSize, so_int newSize, so_int align) {
@@ -61,29 +61,30 @@ so_R_ptr_err mem_Arena_Realloc(void* self, void* ptr, so_int oldSize, so_int new
             so_clear(so_byte, so_slice(so_byte, a->buf, a->offset, newEnd));
         }
         a->offset = newEnd;
-        return (so_R_ptr_err){.val = ptr, .err = NULL};
+        return (so_R_ptr_err){.val = ptr, .err = (so_Error){0}};
     }
     // Not the last allocation, shrinking: return same pointer.
     if (newSize <= oldSize) {
-        return (so_R_ptr_err){.val = ptr, .err = NULL};
+        return (so_R_ptr_err){.val = ptr, .err = (so_Error){0}};
     }
     // Not the last allocation, growing: allocate new and copy.
     so_R_ptr_err _res1 = mem_Arena_Alloc(a, newSize, align);
     void* newPtr = _res1.val;
     so_Error err = _res1.err;
-    if (err != NULL) {
+    if (err.self != NULL) {
         return (so_R_ptr_err){.val = NULL, .err = err};
     }
     memmove(newPtr, ptr, (uintptr_t)(oldSize));
-    return (so_R_ptr_err){.val = newPtr, .err = NULL};
+    return (so_R_ptr_err){.val = newPtr, .err = (so_Error){0}};
 }
 
 void mem_Arena_Free(void* self, void* ptr, so_int size, so_int align) {
     mem_Arena* a = self;
-    (void)a;
-    (void)ptr;
-    (void)size;
     (void)align;
+    // Last allocation: reclaim the space.
+    if (ptr == &so_at(so_byte, a->buf, a->lastStart) && a->lastStart + size == a->offset) {
+        a->offset = a->lastStart;
+    }
 }
 
 // Reset reclaims all allocated memory, allowing the arena to be reused.
@@ -145,7 +146,7 @@ so_R_ptr_err mem_SystemAllocator_Alloc(void* self, so_int size, so_int align) {
     if (ptr == NULL) {
         return (so_R_ptr_err){.val = NULL, .err = mem_ErrOutOfMemory};
     }
-    return (so_R_ptr_err){.val = ptr, .err = NULL};
+    return (so_R_ptr_err){.val = ptr, .err = (so_Error){0}};
 }
 
 so_R_ptr_err mem_SystemAllocator_Realloc(void* self, void* ptr, so_int oldSize, so_int newSize, so_int align) {
@@ -165,7 +166,7 @@ so_R_ptr_err mem_SystemAllocator_Realloc(void* self, void* ptr, so_int oldSize, 
         so_byte* p = c_PtrAdd(so_byte, ((so_byte*)newPtr), (oldSize));
         mem_Clear(p, newSize - oldSize);
     }
-    return (so_R_ptr_err){.val = newPtr, .err = NULL};
+    return (so_R_ptr_err){.val = newPtr, .err = (so_Error){0}};
 }
 
 void mem_SystemAllocator_Free(void* self, void* ptr, so_int size, so_int align) {
@@ -182,13 +183,13 @@ so_R_ptr_err mem_Tracker_Alloc(void* self, so_int size, so_int align) {
     so_R_ptr_err _res1 = t->Allocator.Alloc(t->Allocator.self, size, align);
     void* ptr = _res1.val;
     so_Error err = _res1.err;
-    if (err != NULL) {
+    if (err.self != NULL) {
         return (so_R_ptr_err){.val = NULL, .err = err};
     }
     t->Stats.Alloc += (uint64_t)(size);
     t->Stats.TotalAlloc += (uint64_t)(size);
     t->Stats.Mallocs++;
-    return (so_R_ptr_err){.val = ptr, .err = NULL};
+    return (so_R_ptr_err){.val = ptr, .err = (so_Error){0}};
 }
 
 so_R_ptr_err mem_Tracker_Realloc(void* self, void* ptr, so_int oldSize, so_int newSize, so_int align) {
@@ -196,7 +197,7 @@ so_R_ptr_err mem_Tracker_Realloc(void* self, void* ptr, so_int oldSize, so_int n
     so_R_ptr_err _res1 = t->Allocator.Realloc(t->Allocator.self, ptr, oldSize, newSize, align);
     void* newPtr = _res1.val;
     so_Error err = _res1.err;
-    if (err != NULL) {
+    if (err.self != NULL) {
         return (so_R_ptr_err){.val = NULL, .err = err};
     }
     if (newSize > oldSize) {
@@ -207,7 +208,7 @@ so_R_ptr_err mem_Tracker_Realloc(void* self, void* ptr, so_int oldSize, so_int n
     }
     t->Stats.Mallocs++;
     t->Stats.Frees++;
-    return (so_R_ptr_err){.val = newPtr, .err = NULL};
+    return (so_R_ptr_err){.val = newPtr, .err = (so_Error){0}};
 }
 
 void mem_Tracker_Free(void* self, void* ptr, so_int size, so_int align) {

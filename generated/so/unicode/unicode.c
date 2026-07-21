@@ -1,30 +1,26 @@
 #include "unicode.h"
 
+// -- Forward declarations --
+static bool isExcludingLatin(unicode_RangeTable* rangeTab, so_rune r);
+static bool is16(so_Slice ranges, uint16_t r);
+static bool is32(so_Slice ranges, uint32_t r);
+static so_R_rune_bool to(so_int _case, so_rune r, so_Slice caseRange);
+static unicode_CaseRange* lookupCaseRange(so_rune r, so_Slice caseRange);
+static so_rune convertCase(so_int _case, so_rune r, unicode_CaseRange* cr);
+
 // -- Variables and constants --
 
-// Version is the Unicode edition from which the tables are derived.
-const so_String unicode_Version = so_str("15.0.0");
-
 // Bit masks for each code point under U+0100, for fast lookup.
-static const so_int pC = 1;
-static const so_int pP = 2;
-static const so_int pN = 4;
-static const so_int pS = 8;
-static const so_int pZ = 16;
-static const so_int pLu = 32;
-static const so_int pLl = 64;
-static const so_int pp = 128;
-static const so_int pLo = (pLl | pLu);
-static const so_int pLmask = pLo;
-const so_rune unicode_MaxRune = U'\U0010FFFF';
-const so_rune unicode_ReplacementChar = U'\uFFFD';
-const so_rune unicode_MaxASCII = U'\x7f';
-const so_rune unicode_MaxLatin1 = U'\u00FF';
-
-// If the Delta field of a [CaseRange] is UpperLower, it means
-// this CaseRange represents a sequence of the form (say)
-// [Upper] [Lower] [Upper] [Lower].
-const so_rune unicode_UpperLower = unicode_MaxRune + 1;
+static const int64_t pC = 1;
+static const int64_t pP = 2;
+static const int64_t pN = 4;
+static const int64_t pS = 8;
+static const int64_t pZ = 16;
+static const int64_t pLu = 32;
+static const int64_t pLl = 64;
+static const int64_t pp = 128;
+static const int64_t pLo = (pLl | pLu);
+static const int64_t pLmask = pLo;
 
 // Latin is the set of Unicode characters in script Latin.
 unicode_RangeTable* unicode_Latin = &(unicode_RangeTable){.R16 = (so_Slice){(unicode_Range16[31]){(unicode_Range16){0x0041, 0x005a, 1}, (unicode_Range16){0x0061, 0x007a, 1}, (unicode_Range16){0x00aa, 0x00ba, 16}, (unicode_Range16){0x00c0, 0x00d6, 1}, (unicode_Range16){0x00d8, 0x00f6, 1}, (unicode_Range16){0x00f8, 0x02b8, 1}, (unicode_Range16){0x02e0, 0x02e4, 1}, (unicode_Range16){0x1d00, 0x1d25, 1}, (unicode_Range16){0x1d2c, 0x1d5c, 1}, (unicode_Range16){0x1d62, 0x1d65, 1}, (unicode_Range16){0x1d6b, 0x1d77, 1}, (unicode_Range16){0x1d79, 0x1dbe, 1}, (unicode_Range16){0x1e00, 0x1eff, 1}, (unicode_Range16){0x2071, 0x207f, 14}, (unicode_Range16){0x2090, 0x209c, 1}, (unicode_Range16){0x212a, 0x212b, 1}, (unicode_Range16){0x2132, 0x214e, 28}, (unicode_Range16){0x2160, 0x2188, 1}, (unicode_Range16){0x2c60, 0x2c7f, 1}, (unicode_Range16){0xa722, 0xa787, 1}, (unicode_Range16){0xa78b, 0xa7ca, 1}, (unicode_Range16){0xa7d0, 0xa7d1, 1}, (unicode_Range16){0xa7d3, 0xa7d5, 2}, (unicode_Range16){0xa7d6, 0xa7d9, 1}, (unicode_Range16){0xa7f2, 0xa7ff, 1}, (unicode_Range16){0xab30, 0xab5a, 1}, (unicode_Range16){0xab5c, 0xab64, 1}, (unicode_Range16){0xab66, 0xab69, 1}, (unicode_Range16){0xfb00, 0xfb06, 1}, (unicode_Range16){0xff21, 0xff3a, 1}, (unicode_Range16){0xff41, 0xff5a, 1}}, 31, 31}, .R32 = (so_Slice){(unicode_Range32[5]){(unicode_Range32){0x10780, 0x10785, 1}, (unicode_Range32){0x10787, 0x107b0, 1}, (unicode_Range32){0x107b2, 0x107ba, 1}, (unicode_Range32){0x1df00, 0x1df1e, 1}, (unicode_Range32){0x1df25, 0x1df2a, 1}}, 5, 5}, .LatinOffset = 5};
@@ -54,21 +50,7 @@ static uint8_t properties[256] = {[0x00] = pC, [0x01] = pC, [0x02] = pC, [0x03] 
 
 // linearMax is the maximum size table for linear search for non-Latin1 rune.
 // Derived by running 'go test -calibrate'.
-static const so_int linearMax = 18;
-
-// Indices into the Delta arrays inside CaseRanges for case mapping.
-const so_int unicode_UpperCase = 0;
-const so_int unicode_LowerCase = 1;
-const so_int unicode_TitleCase = 2;
-const so_int unicode_MaxCase = 3;
-
-// -- Forward declarations --
-static bool isExcludingLatin(unicode_RangeTable* rangeTab, so_rune r);
-static bool is16(so_Slice ranges, uint16_t r);
-static bool is32(so_Slice ranges, uint32_t r);
-static so_R_rune_bool to(so_int _case, so_rune r, so_Slice caseRange);
-static unicode_CaseRange* lookupCaseRange(so_rune r, so_Slice caseRange);
-static so_rune convertCase(so_int _case, so_rune r, unicode_CaseRange* cr);
+static const int64_t linearMax = 18;
 
 // -- atables.go --
 
@@ -204,7 +186,7 @@ static bool is16(so_Slice ranges, uint16_t r) {
     so_int lo = 0;
     so_int hi = so_len(ranges);
     for (; lo < hi;) {
-        so_int m = (so_int)((uint64_t)(lo + hi) >> 1);
+        so_int m = (so_int)((so_uint)(lo + hi) >> 1);
         unicode_Range16* range_ = &so_at(unicode_Range16, ranges, m);
         if (range_->Lo <= r && r <= range_->Hi) {
             return range_->Stride == 1 || (r - range_->Lo) % range_->Stride == 0;
@@ -236,7 +218,7 @@ static bool is32(so_Slice ranges, uint32_t r) {
     so_int lo = 0;
     so_int hi = so_len(ranges);
     for (; lo < hi;) {
-        so_int m = (so_int)((uint64_t)(lo + hi) >> 1);
+        so_int m = (so_int)((so_uint)(lo + hi) >> 1);
         unicode_Range32 range_ = so_at(unicode_Range32, ranges, m);
         if (range_.Lo <= r && r <= range_.Hi) {
             return range_.Stride == 1 || (r - range_.Lo) % range_.Stride == 0;
@@ -316,7 +298,7 @@ static unicode_CaseRange* lookupCaseRange(so_rune r, so_Slice caseRange) {
     so_int lo = 0;
     so_int hi = so_len(caseRange);
     for (; lo < hi;) {
-        so_int m = (so_int)((uint64_t)(lo + hi) >> 1);
+        so_int m = (so_int)((so_uint)(lo + hi) >> 1);
         unicode_CaseRange* cr = &so_at(unicode_CaseRange, caseRange, m);
         if ((so_rune)(cr->Lo) <= r && r <= (so_rune)(cr->Hi)) {
             return cr;

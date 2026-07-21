@@ -6,32 +6,26 @@ static const so_String pop8tab = so_str("" "\x00\x01\x01\x02\x01\x02\x02\x03\x01
 static const so_String rev8tab = so_str("" "\x00\x80\x40\xc0\x20\xa0\x60\xe0\x10\x90\x50\xd0\x30\xb0\x70\xf0" "\x08\x88\x48\xc8\x28\xa8\x68\xe8\x18\x98\x58\xd8\x38\xb8\x78\xf8" "\x04\x84\x44\xc4\x24\xa4\x64\xe4\x14\x94\x54\xd4\x34\xb4\x74\xf4" "\x0c\x8c\x4c\xcc\x2c\xac\x6c\xec\x1c\x9c\x5c\xdc\x3c\xbc\x7c\xfc" "\x02\x82\x42\xc2\x22\xa2\x62\xe2\x12\x92\x52\xd2\x32\xb2\x72\xf2" "\x0a\x8a\x4a\xca\x2a\xaa\x6a\xea\x1a\x9a\x5a\xda\x3a\xba\x7a\xfa" "\x06\x86\x46\xc6\x26\xa6\x66\xe6\x16\x96\x56\xd6\x36\xb6\x76\xf6" "\x0e\x8e\x4e\xce\x2e\xae\x6e\xee\x1e\x9e\x5e\xde\x3e\xbe\x7e\xfe" "\x01\x81\x41\xc1\x21\xa1\x61\xe1\x11\x91\x51\xd1\x31\xb1\x71\xf1" "\x09\x89\x49\xc9\x29\xa9\x69\xe9\x19\x99\x59\xd9\x39\xb9\x79\xf9" "\x05\x85\x45\xc5\x25\xa5\x65\xe5\x15\x95\x55\xd5\x35\xb5\x75\xf5" "\x0d\x8d\x4d\xcd\x2d\xad\x6d\xed\x1d\x9d\x5d\xdd\x3d\xbd\x7d\xfd" "\x03\x83\x43\xc3\x23\xa3\x63\xe3\x13\x93\x53\xd3\x33\xb3\x73\xf3" "\x0b\x8b\x4b\xcb\x2b\xab\x6b\xeb\x1b\x9b\x5b\xdb\x3b\xbb\x7b\xfb" "\x07\x87\x47\xc7\x27\xa7\x67\xe7\x17\x97\x57\xd7\x37\xb7\x77\xf7" "\x0f\x8f\x4f\xcf\x2f\xaf\x6f\xef\x1f\x9f\x5f\xdf\x3f\xbf\x7f\xff");
 static const so_String len8tab = so_str("" "\x00\x01\x02\x02\x03\x03\x03\x03\x04\x04\x04\x04\x04\x04\x04\x04" "\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05" "\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06" "\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06" "\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07" "\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07" "\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07" "\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07" "\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" "\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" "\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" "\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" "\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" "\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" "\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" "\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08");
 
-// 32 or 64
-static const so_int uintSize = ((so_int)32 << (~(uint64_t)(0) >> 63));
-
-// UintSize is the size of a uint in bits.
-const so_int bits_UintSize = uintSize;
-
 // --- TrailingZeros ---
 // See http://keithandkatie.com/keith/papers/debruijn.html
-static const so_int deBruijn32 = 0x077CB531;
+static const int64_t deBruijn32 = 0x077CB531;
 static so_byte deBruijn32tab[32] = {0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
-static const so_int deBruijn64 = 0x03f79d71b4ca8b09;
+static const int64_t deBruijn64 = 0x03f79d71b4ca8b09;
 static so_byte deBruijn64tab[64] = {0, 1, 56, 2, 57, 49, 28, 3, 61, 58, 42, 50, 38, 29, 17, 4, 62, 47, 59, 36, 45, 43, 51, 22, 53, 39, 33, 30, 24, 18, 12, 5, 63, 55, 48, 27, 60, 41, 37, 16, 46, 35, 44, 21, 52, 32, 23, 11, 54, 26, 40, 15, 34, 20, 31, 10, 25, 14, 19, 9, 13, 8, 7, 6};
 
 // --- OnesCount ---
 // 01010101 ...
-static const so_int m0 = 0x5555555555555555;
+static const int64_t m0 = 0x5555555555555555;
 
 // 00110011 ...
-static const so_int m1 = 0x3333333333333333;
+static const int64_t m1 = 0x3333333333333333;
 
 // 00001111 ...
-static const so_int m2 = 0x0f0f0f0f0f0f0f0f;
+static const int64_t m2 = 0x0f0f0f0f0f0f0f0f;
 
 // etc.
-static const so_int m3 = 0x00ff00ff00ff00ff;
-static const so_int m4 = 0x0000ffff0000ffff;
+static const int64_t m3 = 0x00ff00ff00ff00ff;
+static const int64_t m4 = 0x0000ffff0000ffff;
 
 // -- atables.go --
 
@@ -39,7 +33,7 @@ static const so_int m4 = 0x0000ffff0000ffff;
 
 // --- LeadingZeros ---
 // LeadingZeros returns the number of leading zero bits in x; the result is [UintSize] for x == 0.
-so_int bits_LeadingZeros(uint64_t x) {
+so_int bits_LeadingZeros(so_uint x) {
     return bits_UintSize - bits_Len(x);
 }
 
@@ -64,7 +58,7 @@ so_int bits_LeadingZeros64(uint64_t x) {
 }
 
 // TrailingZeros returns the number of trailing zero bits in x; the result is [UintSize] for x == 0.
-so_int bits_TrailingZeros(uint64_t x) {
+so_int bits_TrailingZeros(so_uint x) {
     if (bits_UintSize == 32) {
         return bits_TrailingZeros32((uint32_t)(x));
     }
@@ -114,7 +108,7 @@ so_int bits_TrailingZeros64(uint64_t x) {
 }
 
 // OnesCount returns the number of one bits ("population count") in x.
-so_int bits_OnesCount(uint64_t x) {
+so_int bits_OnesCount(so_uint x) {
     if (bits_UintSize == 32) {
         return bits_OnesCount32((uint32_t)(x));
     }
@@ -158,14 +152,14 @@ so_int bits_OnesCount64(uint64_t x) {
     // more, but it saves at best one instruction, so we leave
     // it alone for clarity.
     // all bits set; 1<<64 - 1 would overflow in C
-    const so_int m = -1;
+    const int64_t m = -1;
     x = ((x >> 1) & (m0 & m)) + (x & (m0 & m));
     x = ((x >> 2) & (m1 & m)) + (x & (m1 & m));
     x = (((x >> 4) + x) & (m2 & m));
     x += (x >> 8);
     x += (x >> 16);
     x += (x >> 32);
-    return ((so_int)(x) & (((so_int)1 << 7) - 1));
+    return ((so_int)(x) & (((int64_t)1 << 7) - 1));
 }
 
 // --- RotateLeft ---
@@ -173,11 +167,11 @@ so_int bits_OnesCount64(uint64_t x) {
 // To rotate x right by k bits, call RotateLeft(x, -k).
 //
 // This function's execution time does not depend on the inputs.
-uint64_t bits_RotateLeft(uint64_t x, so_int k) {
+so_uint bits_RotateLeft(so_uint x, so_int k) {
     if (bits_UintSize == 32) {
-        return (uint64_t)(bits_RotateLeft32((uint32_t)(x), k));
+        return (so_uint)(bits_RotateLeft32((uint32_t)(x), k));
     }
-    return (uint64_t)(bits_RotateLeft64((uint64_t)(x), k));
+    return (so_uint)(bits_RotateLeft64((uint64_t)(x), k));
 }
 
 // RotateLeft8 returns the value of x rotated left by (k mod 8) bits.
@@ -185,8 +179,8 @@ uint64_t bits_RotateLeft(uint64_t x, so_int k) {
 //
 // This function's execution time does not depend on the inputs.
 uint8_t bits_RotateLeft8(uint8_t x, so_int k) {
-    const so_int n = 8;
-    uint64_t s = ((uint64_t)(k) & (n - 1));
+    const int64_t n = 8;
+    so_uint s = ((so_uint)(k) & (n - 1));
     return ((x << s) | (x >> (n - s)));
 }
 
@@ -195,8 +189,8 @@ uint8_t bits_RotateLeft8(uint8_t x, so_int k) {
 //
 // This function's execution time does not depend on the inputs.
 uint16_t bits_RotateLeft16(uint16_t x, so_int k) {
-    const so_int n = 16;
-    uint64_t s = ((uint64_t)(k) & (n - 1));
+    const int64_t n = 16;
+    so_uint s = ((so_uint)(k) & (n - 1));
     return ((x << s) | (x >> (n - s)));
 }
 
@@ -205,8 +199,8 @@ uint16_t bits_RotateLeft16(uint16_t x, so_int k) {
 //
 // This function's execution time does not depend on the inputs.
 uint32_t bits_RotateLeft32(uint32_t x, so_int k) {
-    const so_int n = 32;
-    uint64_t s = ((uint64_t)(k) & (n - 1));
+    const int64_t n = 32;
+    so_uint s = ((so_uint)(k) & (n - 1));
     return ((x << s) | (x >> (n - s)));
 }
 
@@ -215,18 +209,18 @@ uint32_t bits_RotateLeft32(uint32_t x, so_int k) {
 //
 // This function's execution time does not depend on the inputs.
 uint64_t bits_RotateLeft64(uint64_t x, so_int k) {
-    const so_int n = 64;
-    uint64_t s = ((uint64_t)(k) & (n - 1));
+    const int64_t n = 64;
+    so_uint s = ((so_uint)(k) & (n - 1));
     return ((x << s) | (x >> (n - s)));
 }
 
 // --- Reverse ---
 // Reverse returns the value of x with its bits in reversed order.
-uint64_t bits_Reverse(uint64_t x) {
+so_uint bits_Reverse(so_uint x) {
     if (bits_UintSize == 32) {
-        return (uint64_t)(bits_Reverse32((uint32_t)(x)));
+        return (so_uint)(bits_Reverse32((uint32_t)(x)));
     }
-    return (uint64_t)(bits_Reverse64((uint64_t)(x)));
+    return (so_uint)(bits_Reverse64((uint64_t)(x)));
 }
 
 // Reverse8 returns the value of x with its bits in reversed order.
@@ -241,7 +235,7 @@ uint16_t bits_Reverse16(uint16_t x) {
 
 // Reverse32 returns the value of x with its bits in reversed order.
 uint32_t bits_Reverse32(uint32_t x) {
-    const so_int m = ((so_int)1 << 32) - 1;
+    const int64_t m = ((int64_t)1 << 32) - 1;
     x = (((x >> 1) & (m0 & m)) | ((x & (m0 & m)) << 1));
     x = (((x >> 2) & (m1 & m)) | ((x & (m1 & m)) << 2));
     x = (((x >> 4) & (m2 & m)) | ((x & (m2 & m)) << 4));
@@ -251,7 +245,7 @@ uint32_t bits_Reverse32(uint32_t x) {
 // Reverse64 returns the value of x with its bits in reversed order.
 uint64_t bits_Reverse64(uint64_t x) {
     // all bits set; 1<<64 - 1 would overflow in C
-    const so_int m = -1;
+    const int64_t m = -1;
     x = (((x >> 1) & (m0 & m)) | ((x & (m0 & m)) << 1));
     x = (((x >> 2) & (m1 & m)) | ((x & (m1 & m)) << 2));
     x = (((x >> 4) & (m2 & m)) | ((x & (m2 & m)) << 4));
@@ -262,11 +256,11 @@ uint64_t bits_Reverse64(uint64_t x) {
 // ReverseBytes returns the value of x with its bytes in reversed order.
 //
 // This function's execution time does not depend on the inputs.
-uint64_t bits_ReverseBytes(uint64_t x) {
+so_uint bits_ReverseBytes(so_uint x) {
     if (bits_UintSize == 32) {
-        return (uint64_t)(bits_ReverseBytes32((uint32_t)(x)));
+        return (so_uint)(bits_ReverseBytes32((uint32_t)(x)));
     }
-    return (uint64_t)(bits_ReverseBytes64((uint64_t)(x)));
+    return (so_uint)(bits_ReverseBytes64((uint64_t)(x)));
 }
 
 // ReverseBytes16 returns the value of x with its bytes in reversed order.
@@ -280,7 +274,7 @@ uint16_t bits_ReverseBytes16(uint16_t x) {
 //
 // This function's execution time does not depend on the inputs.
 uint32_t bits_ReverseBytes32(uint32_t x) {
-    const so_int m = ((so_int)1 << 32) - 1;
+    const int64_t m = ((int64_t)1 << 32) - 1;
     x = (((x >> 8) & (m3 & m)) | ((x & (m3 & m)) << 8));
     return ((x >> 16) | (x << 16));
 }
@@ -290,7 +284,7 @@ uint32_t bits_ReverseBytes32(uint32_t x) {
 // This function's execution time does not depend on the inputs.
 uint64_t bits_ReverseBytes64(uint64_t x) {
     // all bits set; 1<<64 - 1 would overflow in C
-    const so_int m = -1;
+    const int64_t m = -1;
     x = (((x >> 8) & (m3 & m)) | ((x & (m3 & m)) << 8));
     x = (((x >> 16) & (m4 & m)) | ((x & (m4 & m)) << 16));
     return ((x >> 32) | (x << 32));
@@ -298,7 +292,7 @@ uint64_t bits_ReverseBytes64(uint64_t x) {
 
 // --- Len ---
 // Len returns the minimum number of bits required to represent x; the result is 0 for x == 0.
-so_int bits_Len(uint64_t x) {
+so_int bits_Len(so_uint x) {
     if (bits_UintSize == 32) {
         return bits_Len32((uint32_t)(x));
     }
@@ -358,17 +352,17 @@ so_int bits_Len64(uint64_t x) {
 // The carryOut output is guaranteed to be 0 or 1.
 //
 // This function's execution time does not depend on the inputs.
-so_R_uint_uint bits_Add(uint64_t x, uint64_t y, uint64_t carry) {
+so_R_uint_uint bits_Add(so_uint x, so_uint y, so_uint carry) {
     if (bits_UintSize == 32) {
         so_R_u32_u32 _res1 = bits_Add32((uint32_t)(x), (uint32_t)(y), (uint32_t)(carry));
         uint32_t s32 = _res1.val;
         uint32_t c32 = _res1.val2;
-        return (so_R_uint_uint){.val = (uint64_t)(s32), .val2 = (uint64_t)(c32)};
+        return (so_R_uint_uint){.val = (so_uint)(s32), .val2 = (so_uint)(c32)};
     }
     so_R_u64_u64 _res2 = bits_Add64((uint64_t)(x), (uint64_t)(y), (uint64_t)(carry));
     uint64_t s64 = _res2.val;
     uint64_t c64 = _res2.val2;
-    return (so_R_uint_uint){.val = (uint64_t)(s64), .val2 = (uint64_t)(c64)};
+    return (so_R_uint_uint){.val = (so_uint)(s64), .val2 = (so_uint)(c64)};
 }
 
 // Add32 returns the sum with carry of x, y and carry: sum = x + y + carry.
@@ -403,17 +397,17 @@ so_R_u64_u64 bits_Add64(uint64_t x, uint64_t y, uint64_t carry) {
 // The borrowOut output is guaranteed to be 0 or 1.
 //
 // This function's execution time does not depend on the inputs.
-so_R_uint_uint bits_Sub(uint64_t x, uint64_t y, uint64_t borrow) {
+so_R_uint_uint bits_Sub(so_uint x, so_uint y, so_uint borrow) {
     if (bits_UintSize == 32) {
         so_R_u32_u32 _res1 = bits_Sub32((uint32_t)(x), (uint32_t)(y), (uint32_t)(borrow));
         uint32_t d32 = _res1.val;
         uint32_t b32 = _res1.val2;
-        return (so_R_uint_uint){.val = (uint64_t)(d32), .val2 = (uint64_t)(b32)};
+        return (so_R_uint_uint){.val = (so_uint)(d32), .val2 = (so_uint)(b32)};
     }
     so_R_u64_u64 _res2 = bits_Sub64((uint64_t)(x), (uint64_t)(y), (uint64_t)(borrow));
     uint64_t d64 = _res2.val;
     uint64_t b64 = _res2.val2;
-    return (so_R_uint_uint){.val = (uint64_t)(d64), .val2 = (uint64_t)(b64)};
+    return (so_R_uint_uint){.val = (so_uint)(d64), .val2 = (so_uint)(b64)};
 }
 
 // Sub32 returns the difference of x, y and borrow, diff = x - y - borrow.
@@ -449,17 +443,17 @@ so_R_u64_u64 bits_Sub64(uint64_t x, uint64_t y, uint64_t borrow) {
 // half returned in lo.
 //
 // This function's execution time does not depend on the inputs.
-so_R_uint_uint bits_Mul(uint64_t x, uint64_t y) {
+so_R_uint_uint bits_Mul(so_uint x, so_uint y) {
     if (bits_UintSize == 32) {
         so_R_u32_u32 _res1 = bits_Mul32((uint32_t)(x), (uint32_t)(y));
         uint32_t h = _res1.val;
         uint32_t l = _res1.val2;
-        return (so_R_uint_uint){.val = (uint64_t)(h), .val2 = (uint64_t)(l)};
+        return (so_R_uint_uint){.val = (so_uint)(h), .val2 = (so_uint)(l)};
     }
     so_R_u64_u64 _res2 = bits_Mul64((uint64_t)(x), (uint64_t)(y));
     uint64_t h = _res2.val;
     uint64_t l = _res2.val2;
-    return (so_R_uint_uint){.val = (uint64_t)(h), .val2 = (uint64_t)(l)};
+    return (so_R_uint_uint){.val = (so_uint)(h), .val2 = (so_uint)(l)};
 }
 
 // Mul32 returns the 64-bit product of x and y: (hi, lo) = x * y
@@ -479,7 +473,7 @@ so_R_u32_u32 bits_Mul32(uint32_t x, uint32_t y) {
 //
 // This function's execution time does not depend on the inputs.
 so_R_u64_u64 bits_Mul64(uint64_t x, uint64_t y) {
-    const so_int mask32 = ((so_int)1 << 32) - 1;
+    const int64_t mask32 = ((int64_t)1 << 32) - 1;
     uint64_t x0 = (x & mask32);
     uint64_t x1 = (x >> 32);
     uint64_t y0 = (y & mask32);
@@ -499,17 +493,17 @@ so_R_u64_u64 bits_Mul64(uint64_t x, uint64_t y) {
 // quo = (hi, lo)/y, rem = (hi, lo)%y with the dividend bits' upper
 // half in parameter hi and the lower half in parameter lo.
 // Div panics for y == 0 (division by zero) or y <= hi (quotient overflow).
-so_R_uint_uint bits_Div(uint64_t hi, uint64_t lo, uint64_t y) {
+so_R_uint_uint bits_Div(so_uint hi, so_uint lo, so_uint y) {
     if (bits_UintSize == 32) {
         so_R_u32_u32 _res1 = bits_Div32((uint32_t)(hi), (uint32_t)(lo), (uint32_t)(y));
         uint32_t q = _res1.val;
         uint32_t r = _res1.val2;
-        return (so_R_uint_uint){.val = (uint64_t)(q), .val2 = (uint64_t)(r)};
+        return (so_R_uint_uint){.val = (so_uint)(q), .val2 = (so_uint)(r)};
     }
     so_R_u64_u64 _res2 = bits_Div64((uint64_t)(hi), (uint64_t)(lo), (uint64_t)(y));
     uint64_t q = _res2.val;
     uint64_t r = _res2.val2;
-    return (so_R_uint_uint){.val = (uint64_t)(q), .val2 = (uint64_t)(r)};
+    return (so_R_uint_uint){.val = (so_uint)(q), .val2 = (so_uint)(r)};
 }
 
 // Div32 returns the quotient and remainder of (hi, lo) divided by y:
@@ -540,10 +534,10 @@ so_R_u64_u64 bits_Div64(uint64_t hi, uint64_t lo, uint64_t y) {
     if (hi == 0) {
         return (so_R_u64_u64){.val = lo / y, .val2 = lo % y};
     }
-    uint64_t s = (uint64_t)(bits_LeadingZeros64(y));
+    so_uint s = (so_uint)(bits_LeadingZeros64(y));
     y <<= s;
-    const so_int two32 = ((so_int)1 << 32);
-    const so_int mask32 = two32 - 1;
+    const int64_t two32 = ((int64_t)1 << 32);
+    const int64_t mask32 = two32 - 1;
     uint64_t yn1 = (y >> 32);
     uint64_t yn0 = (y & mask32);
     uint64_t un32 = ((hi << s) | (lo >> (64 - s)));
@@ -575,11 +569,11 @@ so_R_u64_u64 bits_Div64(uint64_t hi, uint64_t lo, uint64_t y) {
 // Rem returns the remainder of (hi, lo) divided by y. Rem panics for
 // y == 0 (division by zero) but, unlike Div, it doesn't panic on a
 // quotient overflow.
-uint64_t bits_Rem(uint64_t hi, uint64_t lo, uint64_t y) {
+so_uint bits_Rem(so_uint hi, so_uint lo, so_uint y) {
     if (bits_UintSize == 32) {
-        return (uint64_t)(bits_Rem32((uint32_t)(hi), (uint32_t)(lo), (uint32_t)(y)));
+        return (so_uint)(bits_Rem32((uint32_t)(hi), (uint32_t)(lo), (uint32_t)(y)));
     }
-    return (uint64_t)(bits_Rem64((uint64_t)(hi), (uint64_t)(lo), (uint64_t)(y)));
+    return (so_uint)(bits_Rem64((uint64_t)(hi), (uint64_t)(lo), (uint64_t)(y)));
 }
 
 // Rem32 returns the remainder of (hi, lo) divided by y. Rem32 panics

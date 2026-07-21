@@ -1,8 +1,8 @@
 #pragma once
 #include "so/builtin/builtin.h"
 #include "so/errors/errors.h"
-#include "so/math/math.h"
 #include "so/mem/mem.h"
+#include "so/slices/slices.h"
 
 // -- Types --
 
@@ -348,9 +348,9 @@ typedef struct io_MultiWriter {
 extern io_Writer io_Discard;
 
 // Seek whence values.
-extern const so_int io_SeekStart;
-extern const so_int io_SeekCurrent;
-extern const so_int io_SeekEnd;
+static const int64_t io_SeekStart = 0;
+static const int64_t io_SeekCurrent = 1;
+static const int64_t io_SeekEnd = 2;
 
 // EOF is the error returned by Read when no more input is available.
 // (Read must return EOF itself, not an error wrapping EOF,
@@ -435,6 +435,11 @@ io_ReaderAtOffset io_SectionReader_Outer(void* self);
 //
 // Copy allocates a buffer on the stack to hold data during the copy.
 so_R_i64_err io_Copy(io_Writer dst, io_Reader src);
+
+// CopyBuffer is identical to Copy except that it stages through the
+// provided buffer rather than allocating a temporary one.
+// If buf is nil or has zero length, CopyBuffer panics.
+so_R_i64_err io_CopyBuffer(io_Writer dst, io_Reader src, so_Slice buf);
 
 // CopyN copies n bytes (or until an error) from src to dst.
 // It returns the number of bytes copied and the earliest

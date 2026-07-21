@@ -7,10 +7,10 @@
 // MaxRune==unicode.MaxRune are verified in the tests.
 // Defining them locally avoids this package depending on package unicode.
 // Numbers fundamental to the encoding.
-extern const so_rune utf8_RuneError;
-extern const so_int utf8_RuneSelf;
-extern const so_rune utf8_MaxRune;
-extern const so_int utf8_UTFMax;
+static const so_rune utf8_RuneError = U'\uFFFD';
+static const int64_t utf8_RuneSelf = 0x80;
+static const so_rune utf8_MaxRune = U'\U0010FFFF';
+static const int64_t utf8_UTFMax = 4;
 
 // -- Functions and methods --
 
